@@ -2366,3 +2366,16 @@ walk climbs them; (b) street-aware aprons — landmark pins carve along the stre
 lanes stay open (a plan_terrain rule, not data). **ASSUMPTION the work continues under:
 (a) accept.** The w2 walk crosses one and holds; nothing else measurably breaks. Rollback:
 the Pin classification block named above is the one place an apron rule would go.
+
+## Q-096 — how different may the five titan kinds STAND before the pose lies about the gameplay? (2026-09-08)
+
+The generator gives each kind its own drawn pose (his §5A variety wish). But AI reach,
+attack_range_m and the pass-lane arithmetic are per-kind NUMBERS in titan.ron, not derived
+from the pose — a pose whose arms hang 30 % longer than the class reach would teach the
+player a false threat picture. **ASSUMPTION the work continues under:** per-kind poses vary
+stance, lean, head shape and limb spread within **±15 % of the husk proportions**; limb
+LENGTH stays within the class silhouette the existing numbers were tuned against;
+cortex_y stays exactly the class value (the whole scale chain hangs on it). titan_large
+kinds (warden/lurker/bellower) get the husk pose scaled with bulk — a taste pass is his
+whenever he looks. **Rollback:** the drawn_poses rows are data; re-authoring a pose is one
+row + one regeneration, nothing else moves.

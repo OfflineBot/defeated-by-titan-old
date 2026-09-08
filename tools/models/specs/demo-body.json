@@ -1,0 +1,9 @@
+{
+  "name": "demo-body",
+  "geometry": "demo:capsule",
+  "kind": "prop",
+  "seed": 12345,
+  "facets": { "torso": 12 },
+  "palette": { "skin": "sand_brown..brick_red", "trim": "roof_slate" },
+  "detail": { "edge_break_m": 0.06 }
+}

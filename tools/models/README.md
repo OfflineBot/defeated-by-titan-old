@@ -11,9 +11,13 @@ contract for the build round, frozen by the main head before the fan-out.
 ## The one honesty rule
 
 A faceted surface must straddle its analytic hit surface symmetrically: capsule rings are
-authored at the **mid-radius** `r' = r·2/(1+cos(π/n))`, so with n=8 the surface error is
-±0.038·r (±0.049 m on a husk torso), n=12 brings it to ±0.022. All style jitter stays
-inside the same band. The generator READS the authoritative geometry (`titan.ron:
+authored at the **mid-radius** `r' = r·2/(1+cos(π/n))`. **The authoritative band is
+`geometry.mid_radius_band(n)` = `(1−cos(π/n))/(1+cos(π/n))·r`** — exactly 0.0396·r at n=8
+and 0.0173·r at n=12 (wave 1 measured the first README rounding of 0.038 as too tight for
+n=8: a sampler hitting a ring vertex exceeds it by construction; the measured whole-body
+max at n=12 incl. cap polar chords is 0.0208·r). All style jitter stays inside the same
+band. The demo proof artifacts live at `specs/demo-body.json` →
+`assets/3d/gen/demo-body.glb` (33 460 B, deterministic sha a45f6523…). The generator READS the authoritative geometry (`titan.ron:
 drawn_poses`, `art.ron: hulls`) — a spec never copies numbers out of them (rule 5).
 
 ## Files (python stdlib ONLY, same byte-pattern as tools/glb_merge.py)
