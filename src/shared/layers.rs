@@ -18,12 +18,15 @@
 //! **How they are used.** The values are avian `LayerMask`s, so they drop straight into both
 //! ends of the seam without a conversion:
 //!
-//! ```ignore
+//! ```text
 //! // the writer (titan): the cortex is a member of its layer, and collides with nothing
 //! CollisionLayers::new(LAYER_TITAN_CORTEX, LayerMask::NONE)
 //! // the reader (combat): a cast that sees the cortex and nothing else
 //! SpatialQueryFilter::from_mask(LAYER_TITAN_CORTEX)
 //! ```
+//! (A `text` fence, not an `ignore` one, since 2026-09-08: `--full` runs the suite with
+//! `--include-ignored`, which resurrects ignored DOCTESTS too — an illustration without
+//! its imports then fails the push gate. `text` says what it is: prose, not a test.)
 //!
 //! ⚠️ **Since 2026-08-19 exactly one thing wears a `CollisionLayers` component: the player**
 //! ([`PLAYER_COLLIDES_WITH`], attached in `player::spawn_player`, so that two players cannot

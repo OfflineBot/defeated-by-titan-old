@@ -2951,6 +2951,7 @@ fn warps_sent(app: &App) -> usize {
 }
 
 #[test]
+#[ignore = "full tier: 18.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_a_body_dropped_past_the_edge_of_the_map_is_brought_back_into_it() {
     // ## The repro of `B-015`, and the case the fence provably cannot answer.
     //
@@ -3217,6 +3218,7 @@ fn back_in_the_world(p: Vec3, hx: f32, hz: f32, floor_m: f32) -> bool {
 }
 
 #[test]
+#[ignore = "full tier: 52.5s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_the_top_of_the_fence_is_not_a_ring_you_can_stand_on_outside_the_map() {
     // ## The repro, measured 2026-08-28 in the round that refuted the first build
     //
@@ -3306,6 +3308,7 @@ fn f012_the_top_of_the_fence_is_not_a_ring_you_can_stand_on_outside_the_map() {
 }
 
 #[test]
+#[ignore = "full tier: 65.1s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_nothing_that_can_rest_on_the_fence_rests_inside_the_map() {
     // ## 🔴 THE MEASUREMENT `fence_margin_m` STANDS ON, and it refuted the obvious fix twice.
     //
@@ -3429,6 +3432,7 @@ fn f012_nothing_that_can_rest_on_the_fence_rests_inside_the_map() {
 }
 
 #[test]
+#[ignore = "full tier: 55.3s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_the_ground_he_is_sent_back_to_is_never_ground_he_can_be_sent_back_from() {
     // ## THE POISONED HOME. `recovery.rs`'s own header claims this invariant, and on
     // ## 2026-08-29 the shipped game falsified it in four seconds of standing still.
@@ -3555,6 +3559,7 @@ fn f012_the_ground_he_is_sent_back_to_is_never_ground_he_can_be_sent_back_from()
 }
 
 #[test]
+#[ignore = "full tier: 11.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_at_the_smallest_legal_fence_margin_the_recorder_still_keeps_nothing_on_the_fence() {
     // ## 🔴 THE TEST THAT PAYS FOR THE OTHER HALF OF THE FIX, and it exists because the
     // ## control run of 2026-08-29 caught it being unpaid for.
@@ -3754,6 +3759,7 @@ fn f012_a_recovery_whose_destination_does_not_hold_is_not_repeated_every_tick() 
 }
 
 #[test]
+#[ignore = "full tier: 15.1s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_the_map_footprint_is_the_world_at_every_height() {
     // ## THE HEIGHT AXIS. It is the one every fixture of the first round held constant, and it
     // ## is the one the rule depended on.
@@ -4064,6 +4070,7 @@ fn f012_a_body_driven_into_the_fence_at_top_speed_is_never_recovered() {
 }
 
 #[test]
+#[ignore = "full tier: 7.8s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_a_legitimate_fall_inside_the_map_is_never_recovered_at_any_height() {
     // ## THE CONTROLS the user's own play consists of. Not one of these may be recovered.
     //
@@ -4297,6 +4304,7 @@ fn highest_standing_start(app: &App) -> Vec3 {
 }
 
 #[test]
+#[ignore = "full tier: 6.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f012_the_gear_climbs_higher_than_the_fence_and_the_number_is_pinned() {
     // ## The measurement the first build asserted in prose and never took.
     //

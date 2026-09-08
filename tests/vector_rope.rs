@@ -2144,6 +2144,7 @@ fn probe_ground_matrix_excess_at_double_ticks() {
 const CTRL_MODEL_GAP_M: f32 = 0.05;
 
 #[test]
+#[ignore = "full tier: 179.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f3f_two_anchors_and_no_arm_ever_gets_further_from_its_own_anchor_than_its_rope_allows() {
     // 🔴 **RED FIRST, and this is what it read before `Q-058` was built: +51.1978 m** at 60°
     // separation, 20° elevation, yaw 90°, `A` held — a `Drive` rope had no joint at all, so
@@ -2188,6 +2189,7 @@ fn f3f_two_anchors_and_no_arm_ever_gets_further_from_its_own_anchor_than_its_rop
 }
 
 #[test]
+#[ignore = "full tier: 112.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f3f_the_same_two_anchors_hold_with_the_player_standing_on_the_ground() {
     // The other stance, and it is a different code path in three places: `in_flight` is false,
     // so the winch's always-on branch is off; `ground_locomotion` writes the horizontal
@@ -2358,6 +2360,7 @@ fn ctrl_matrix(stance: &'static str, spot_m: Vec3) {
 /// (`min_rope_m` = 3 m, one value) — the pair that decides how fast the two maxima become
 /// impossible.
 #[test]
+#[ignore = "full tier: 212.8s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f3f_with_the_ratchet_held_no_arm_escapes_a_maximum_a_position_could_satisfy() {
     ctrl_matrix("air+Ctrl", AIR_SPOT_M);
 }
@@ -2366,6 +2369,7 @@ fn f3f_with_the_ratchet_held_no_arm_escapes_a_maximum_a_position_could_satisfy()
 /// Tiefpunkt Hoehe gewinnen"*, i.e. the key that takes the player off the floor, and it runs
 /// through `ground_locomotion` and the winch's `in_flight == false` branch on the way.
 #[test]
+#[ignore = "full tier: 190.3s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f3f_the_same_with_the_ratchet_held_and_the_player_standing_on_the_ground() {
     ctrl_matrix("ground+Ctrl", GROUND_SPOT_M);
 }
@@ -2838,6 +2842,7 @@ fn two_rope_hold_sweep() -> (Vec<HoldCell>, f32) {
 ///    cost the one-anchor player his reel, and that is the `n = 1` case a separation term is
 ///    most likely to break.
 #[test]
+#[ignore = "full tier: 32.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f004_two_far_apart_anchors_hold_the_player_instead_of_dragging_him_past_a_maximum() {
     let (cells, min_rope_m) = two_rope_hold_sweep();
     let mut worst = cells.clone();

@@ -160,3 +160,91 @@ fn t003_the_allow_list_names_only_real_domains() {
         assert!(domains.contains(&to), "the allow list names `{to}`, which does not exist");
     }
 }
+
+// ---------------------------------------------------------------------------------------
+// The tier guard (FIND-236). The fast tier works because libtest skips `#[ignore]`d tests
+// by default — which is exactly how a test quietly stops existing. So every ignore has to
+// say which of the two sanctioned reasons it is: it belongs to the FULL tier
+// (`#[ignore = "full tier: …"]`, run by `tools/test.sh --full` at the push gate), or it is
+// a measurement/probe (fn name `measure_*` / `probe_*`, run by hand with `--ignored`,
+// skipped even by `--full`). A bare `#[ignore]`, or one with any other excuse, fails here.
+// ---------------------------------------------------------------------------------------
+
+/// Every `#[ignore` in `text` that names neither the full tier nor a measure_/probe_ fn.
+/// Split out of the test so the control below can attack it with a fixture string.
+fn untiered_ignores(name: &str, text: &str) -> Vec<String> {
+    let lines: Vec<&str> = text.lines().collect();
+    let mut bad = Vec::new();
+    for (no, line) in lines.iter().enumerate() {
+        let code = line.trim_start();
+        if !code.starts_with("#[ignore") {
+            continue;
+        }
+        // The reason is the first quoted string on the line; a bare `#[ignore]` has none.
+        let reason = code.split('"').nth(1).unwrap_or("");
+        if reason.starts_with("full tier:") {
+            continue;
+        }
+        // Otherwise the fn under this attribute must be a measurement or a probe.
+        let fn_name = lines[no + 1..]
+            .iter()
+            .find_map(|l| l.trim_start().strip_prefix("fn "))
+            .map(|rest| rest.split('(').next().unwrap_or("").trim())
+            .unwrap_or("");
+        if fn_name.starts_with("measure_") || fn_name.starts_with("probe_") {
+            continue;
+        }
+        bad.push(format!(
+            "{name}:{} — `{fn_name}` is #[ignore]d with reason {reason:?}. Either the \
+             reason starts with \"full tier:\" (then `tools/test.sh --full` runs it at \
+             the push gate), or the fn is a measure_/probe_. Anything else is a test \
+             that silently stopped running.",
+            no + 1,
+        ));
+    }
+    bad
+}
+
+#[test]
+fn an_ignored_test_names_its_tier_or_is_a_probe() {
+    // Variables the checker reads: every `#[ignore` line and the next `fn` name in each
+    // tests/*.rs. Variables this test varies: none — the repo is the fixture, and the
+    // control below is where the checker itself is attacked (fixtures.md rule).
+    let mut bad = Vec::new();
+    let mut checked = 0usize;
+    for file in rust_files(&crate_root().join("tests")) {
+        let text = std::fs::read_to_string(&file).expect("test file readable");
+        let rel = file.strip_prefix(crate_root()).unwrap_or(&file).display().to_string();
+        bad.extend(untiered_ignores(&rel, &text));
+        checked += 1;
+    }
+    assert!(checked >= 20, "only {checked} files under tests/ were checked — the walk broke");
+    assert!(
+        bad.is_empty(),
+        "{} #[ignore]s without a sanctioned reason:\n  {}",
+        bad.len(),
+        bad.join("\n  ")
+    );
+}
+
+#[test]
+fn the_tier_checker_itself_flags_a_bare_ignore() {
+    // The red-able control: delete the thing you are measuring and watch the number move.
+    // Each fixture line starts with a quote in THIS file's source, so the repo scan above
+    // never mistakes the fixture for a real attribute.
+    let bare = ["#[test]", "#[ignore]", "fn a_test_that_just_went_quiet() {}"].join("\n");
+    assert_eq!(untiered_ignores("fixture", &bare).len(), 1, "a bare #[ignore] must be flagged");
+
+    let excuse = ["#[test]", "#[ignore = \"flaky, look later\"]", "fn f999_some_claim() {}"]
+        .join("\n");
+    assert_eq!(untiered_ignores("fixture", &excuse).len(), 1, "a non-tier excuse must be flagged");
+
+    let tiered = ["#[test]", "#[ignore = \"full tier: 288-cell matrix, 41 s\"]", "fn f999_x() {}"]
+        .join("\n");
+    assert!(untiered_ignores("fixture", &tiered).is_empty(), "a full-tier reason passes");
+
+    let probe = ["#[test]", "#[ignore = \"a probe\"]", "fn probe_something() {}"].join("\n");
+    let measure = ["#[test]", "#[ignore]", "fn measure_something() {}"].join("\n");
+    assert!(untiered_ignores("fixture", &probe).is_empty(), "a probe_ fn passes");
+    assert!(untiered_ignores("fixture", &measure).is_empty(), "a measure_ fn passes");
+}

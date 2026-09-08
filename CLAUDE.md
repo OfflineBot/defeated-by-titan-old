@@ -260,11 +260,15 @@ question nobody asked.
 
 ### 2 · The gate does not have to be the whole suite
 
-`cargo test` is **181 s at best and 530 s under contention**, and every round pays it at least
-once. **At a round gate, run `--lib` plus the integration binaries whose files the round touched.**
-The full suite runs **once**, before the push that closes the round — which is also where `git
-status --short` and the `pgrep` precondition already live. A green binary you did not touch is not
-evidence, it is a re-run.
+The suite grew to ~648 s of runtime, 93 % of it in four binaries — measured 2026-09-08
+(`FIND-236`) and answered with **two tiers in one compiled binary**: ~18 slow sim soaks sit
+behind `#[ignore = "full tier: …"]` (a guard test in `tests/domains.rs` refuses any other
+ignore reason), `tools/test.sh` runs the fast tier by default (the four heavy binaries:
+602 s → **59.6 s**), and **`tools/test.sh --full` runs everything once, before the push
+that closes the round** — which is also where `git status --short` and the `pgrep`
+precondition already live. At a round gate, run `--lib` plus the integration binaries whose
+files the round touched (fast tier). A green binary you did not touch is not evidence, it
+is a re-run — and a tiered test is not skipped, it is scheduled.
 
 ### 3 · Attack claims, not chores — this was already the rule and it was ignored
 

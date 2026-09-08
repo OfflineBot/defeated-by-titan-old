@@ -2139,3 +2139,18 @@ Revisit trigger recorded: when domain-only rigs become the norm or the single-cr
 compile share dominates the warm 29 s. The allow-list DAG is verified split-ready
 (save→progress back-edge is a comment, not an import) — the crate plan exists the day the
 trigger fires.
+
+## FIND-237 — the two-tier suite: 602 s of soak moves behind the push gate, the inner loop is seconds again (2026-09-08)
+
+18 flips, every one solo-timed first (>5 s bar; 64 candidates measured, the FIND-236 list
+over-predicted titan/mission and under-predicted player — 7 of 8 player flips are f012
+fence sweeps at 6.7–65.1 s that no top-line number had named): vector_rope **385 → 3.0 s**
+· titan 88 → 6.5 · player 76 → 11.1 · mission 53 → 39.0. Count conservation proven per
+binary (fast+ignored == old total), full tier zero failures, and the gate GATES —
+measured on titan: fast 40 passed + 3 ignored in 6.3 s, `--full` 43 passed 0 ignored in
+57.6 s. The guard test scans every tests/*.rs: an `#[ignore]` reason must start with
+"full tier:" or decorate a measure_*/probe_* fn — with an inline red-able control (a bare
+ignore and a "flaky, look later" excuse each yield exactly one violation).
+**Open tail:** mission's fast tier holds at 39 s and the remainder sits OUTSIDE the
+candidate list (21 un-timed tests carry it) — its own timing round when it matters.
+Cosmetic: vector_rope.rs:2447's ignore reason says "a measurement" on a probe_-named fn.

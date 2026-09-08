@@ -53,10 +53,11 @@ sanctioned** where they buy honest hitboxes; adapt the docs so they help; keep i
 - **Playtest-gated**: Q-063 gravity feel · Q-064 Shift · Q-046 gas costs · Q-077/Q-080 rope feel ·
   B-020 three husks · the §5D W-angle trade.
 
-## Standing state (2026-09-08)
+## Standing state (2026-09-08 evening)
 
-Corpus 66 GREEN / 16 RED, every red attributed or booked (FIND-229/230/231). Full suite green.
-Tree clean at `0e83583`. The 16 red are the drift-debt stack riding on items 4 and 7 above.
+Corpus 67 GREEN / 15 RED / 0 CRASH — the model swap moved zero scripts; every red is the
+attributed drift-debt stack riding on items 4 and 7 above (lane ruling + speed envelope).
+Full suite green (25 binaries). Pushed through `d609e52`.
 
 ## §6A — his 2026-09-08 test-suite verdict, verbatim, and it gets an instrument
 
@@ -85,7 +86,10 @@ His second half, minutes later, verbatim:
 > das projekt stark auf! eine idee wäre es in libs zu arbeiten oder die tests zu separieren
 > damit man dadurch nicht aufgehalten wird und unabhänig einfach und schnell testen kann!"*
 
-3. **Speed pass (his lib idea, measured before designed):** the suite is 181 s best-case
+3. ~~Speed pass~~ **DONE 2026-09-08 evening (FIND-237)**: two tiers, one binary — fast
+   suite ~105 s (was ~648), inner loop per touched binary 3–11 s, `--full` once at the
+   push gate, guard test against tier abuse. Consolidation 22→7 and the workspace split
+   stay queued behind their FIND-236 triggers. Original scope: the suite is 181 s best-case
    and the distribution is extreme — one binary (vector_rope) runs 385 s, the top four
    carry ~90 % of the runtime, and each of the 25 integration binaries pays its own full
    link of the game. Two levers, in order of cheapness: (a) TIERING — slow sim-heavy tests

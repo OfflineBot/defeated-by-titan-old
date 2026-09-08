@@ -1664,6 +1664,7 @@ fn f030_the_nape_sticks_out_of_the_body_on_every_kind_and_every_class() {
 /// the bellower, and its class (`huge`) is therefore NOT covered by this test. The shape test
 /// above is what covers `huge` and `boss`.
 #[test]
+#[ignore = "full tier: 95.7s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f030_the_nape_is_hittable_for_more_than_one_tick_on_every_spawnable_kind() {
     /// **Derived, not chosen.** The blade cuts for `(active_to_s − active_from_s) × hz` =
     /// 0.14 s × 60 = **8.4 ticks** (`gear.ron`). The nape has to be reachable for at least a
@@ -2683,6 +2684,7 @@ fn q031_a_titan_turns_while_winding_up() {
 /// gradient it used to be. That is a real loss and it belongs to the user's judgement, not to a
 /// silent assert — `docs/QUESTIONS.md` Q-047.
 #[test]
+#[ignore = "full tier: 10.1s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn q031_the_nape_survives_a_titan_who_tracks_you() {
     let d = data(&app());
     let mut table = Vec::new();
@@ -3373,6 +3375,7 @@ fn tightest_pair_m(app: &mut App) -> f32 {
 /// the slot stops reaching `brain::aim`, when two titans are handed the same index, and when
 /// the fade swallows the offset before anybody has arrived.
 #[test]
+#[ignore = "full tier: 6.1s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f055_six_titans_on_one_player_stand_in_six_places() {
     fn run(ring_radius_m: Option<f32>) -> (f32, Vec<u32>) {
         let mut app = app_with_pinned_player(Vec3::new(0.0, 2.0, 0.0), 0.0, MovementState::Grounded);

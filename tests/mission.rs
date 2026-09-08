@@ -1972,6 +1972,7 @@ fn f061_the_lurker_holds_his_ground_while_the_husk_comes_for_you() {
 /// **Red when:** `flank_offset_m: 0.0` on the chorus in `titan.ron` — the first pair collapses
 /// onto the other two and every assert below falls over.
 #[test]
+#[ignore = "full tier: 8.5s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f063_a_chorus_pair_splits_where_a_husk_pair_stacks() {
     let widest = |kind: &str, flank: Option<f32>| -> f32 {
         let mut app = a_field();
@@ -2397,6 +2398,7 @@ fn rings_of(app: &App, template: &str) -> Vec<(Vec3, f32)> {
 /// the only difference is `objective: Breach` against `objective: Cull`. If the verdict did not
 /// come out of the mode, both halves would say the same word and this goes red.
 #[test]
+#[ignore = "full tier: 5.6s solo 2026-09-08 — runs at the push gate (FIND-236)"]
 fn f072_the_deadline_wins_a_breach_and_the_same_sortie_as_a_cull_loses_it() {
     let seconds = 10.0;
     let deadline = 600;
