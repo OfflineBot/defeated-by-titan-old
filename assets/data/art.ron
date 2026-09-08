@@ -145,6 +145,18 @@
         // (`render::model::MODEL_FACES`).
         "titan_husk":     (source: Gltf("3d/glb/a-042-koerpertyp-a-hager-mittel.glb"), scale: 1.0, attribution: None, animations: {}),
 
+        // The four GENERATED kinds (2026-09-08): bodies built AROUND their titan.ron
+        // drawn_poses rows by tools/models/ — drawn == registered by construction
+        // (gate accept.py: flesh outside capsules ≤ 0.05 m, registering air ≤ 0.10 m,
+        // PASS tables in FIND-234). husk deliberately stays on the pack sculpt (Q-097:
+        // it reads anatomical where the generated body reads capsule-true; his eyes
+        // decide with docs/images/q097-*.png). Each glb is deterministic from its spec
+        // in tools/models/specs/ — regeneration is byte-identical.
+        "titan_errant":   (source: Gltf("3d/gen/titan-errant.glb"), scale: 1.0, attribution: None, animations: {}),
+        "titan_chorus":   (source: Gltf("3d/gen/titan-chorus.glb"), scale: 1.0, attribution: None, animations: {}),
+        "titan_scuttler": (source: Gltf("3d/gen/titan-scuttler.glb"), scale: 1.0, attribution: None, animations: {}),
+        "titan_weaver":   (source: Gltf("3d/gen/titan-weaver.glb"), scale: 1.0, attribution: None, animations: {}),
+
         // 🔴 **`titan_large` STAYS `Primitive`, and it is not a size problem — it is 1.4 cm of x.**
         //
         // Binding it takes `tests/titan.rs::q031_the_nape_survives_a_titan_who_tracks_you` red:
@@ -415,7 +427,11 @@
         // facade, which is the only place its 1.24 m of collider costs nothing: a box wider
         // than the pole you can see is a phantom obstacle everywhere except against a wall.
         // (`a-133-fahne-mast` is 2.25 m wide for the same reason and is therefore NOT a row.)
-        "banner_long":    (source: Gltf("3d/glb/a-133-banner-lang.glb"), scale: 1.0, attribution: None, animations: {}),
+        "banner_long":    (source: Gltf("3d/gen/banner-long.glb"), scale: 1.0, attribution: None, animations: {}),
+        // ^ generated 2026-09-08: the pack file draws a pole and NO cloth (B-043 residual,
+        //   p95 0.44 m iron-only); the generated banner fills the hull span with drawn
+        //   cloth, every plan-box face ≤ 0.089 m from geometry (gate PASS, FIND-234).
+        //   NOTE the cloth faces ±z — a camera on ±x sees it edge-on.
 
         // 3d/glb/a-131-karren-intakt.glb — 2.40 x 1.80 x 4.80 m. A depot without a cart in it
         // is a depot nothing was ever delivered to. `-beschaedigt` and `-wrack` are the same

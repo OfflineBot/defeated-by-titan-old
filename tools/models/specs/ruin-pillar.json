@@ -1,0 +1,9 @@
+{
+  "name": "ruin-pillar",
+  "geometry": "art.ron:hulls/ruin_pillar",
+  "kind": "remnant",
+  "seed": 8902,
+  "facets": {},
+  "palette": { "stone": "stone_light", "rubble": "sand_brown", "accent": "moss_green" },
+  "detail": { "edge_break_m": 0.06, "jitter_m": 0.03 }
+}

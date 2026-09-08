@@ -48,12 +48,22 @@ drawn_poses`, `art.ron: hulls`) — a spec never copies numbers out of them (rul
   "name": "titan-husk",
   "geometry": "titan.ron:drawn_poses/titan_husk",
   "kind": "titan | remnant | prop",
+  "size_class": "medium",
   "seed": 12345,
   "facets": { "torso": 12, "limb": 8 },
   "palette": { "skin": "sand_brown..brick_red", "nape_band": "roof_slate" },
   "detail": { "nape_band": true, "eyes": true, "edge_break_m": 0.06 }
 }
 ```
+
+Wave-2 contract addendum (2026-09-08): titan specs REQUIRE `size_class` (the drawn
+rig-neck and band height depend on it; missing exits loudly, no default), and `detail`
+gained style knobs (mottle, eye_size_u/spread/lift, nape_band_half_w/recess,
+cortex_plate*). **A generated titan glb is SINGLE-CLASS** — the drawn neck is
+class-specific, so a small-built body REJECTS at medium (measured: flesh 0.208 m); if one
+file must dress two classes, build it at the larger. And every bound titan model needs its
+own PAINTED cortex plate — the rig's amber sphere is hidden once a glb dresses the titan.
+Statics live in `gen_static.py` (own CLI, imports the same core; a later chore merges).
 
 ## Output contract
 
@@ -88,3 +98,17 @@ banner+remnants. **Main head only**: art.ron source flips, titan.ron drawn_poses
 catalogue-test updates — one atomic swap per class (glb + art.ron + tests in ONE commit).
 **Animations stay `{}`** — generated titans are static striding poses like today; clips
 are a designed later round, not a promise of this one.
+
+## Manifest — every spec and its glb (norms §10 registry)
+
+| spec (tools/models/specs/) | glb (assets/3d/gen/) | bound in art.ron? |
+|---|---|---|
+| demo-body.json | demo-body.glb | no — wave-1 proof artifact |
+| titan-husk.json | titan-husk.glb | **no — Q-097**: husk kept the pack sculpt; this is the hit-true alternate his eyes judge |
+| titan-errant.json | titan-errant.glb | yes (`titan_errant`) |
+| titan-chorus.json | titan-chorus.glb | yes (`titan_chorus`) |
+| titan-scuttler.json | titan-scuttler.glb | yes (`titan_scuttler`) |
+| titan-weaver.json | titan-weaver.glb | yes (`titan_weaver`) |
+| banner-long.json | banner-long.glb | yes (`banner_long`) |
+| ruin-wall-corner.json | ruin-wall-corner.glb | **no — Q-097**: the pack wall reads more ruined; hull-true alternate on file |
+| ruin-pillar.json | ruin-pillar.glb | **no — Q-097**: same |

@@ -1,0 +1,10 @@
+{
+  "name": "titan-chorus",
+  "geometry": "titan.ron:drawn_poses/titan_chorus",
+  "kind": "titan",
+  "size_class": "medium",
+  "seed": 42003,
+  "facets": { "torso": 12, "limb": 8 },
+  "palette": { "skin": "sand_brown", "nape_band": "roof_slate", "eyes": "char_black" },
+  "detail": { "nape_band": true, "eyes": true, "mottle": 0.0, "eye_size_u": 0.18, "eye_spread": 0.5 }
+}

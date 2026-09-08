@@ -2124,11 +2124,18 @@ fn f053_the_telegraph_goes_dark_when_the_pose_angles_go_to_zero() {
 fn f030_a_models_cortex_anchor_beats_the_computed_position() {
     let mut app = app();
     let d = data(&app);
-    let husk = d.titan("husk").expect("husk");
-    let computed = d.titan_cortex_height_m(husk).expect("husk cortex height");
+    // ⚠️ The kind is `warden` ON PURPOSE, and it used to be `husk` — the husk wears a real
+    // Gltf model, and its ASYNC scene load writes `ModelAnchors` at a tick this test does
+    // not control. In the full suite the load landed AFTER the synthetic insert below and
+    // overwrote it (kill zone back at computed; measured 2026-09-08 when four more glbs in
+    // art.ron re-rolled the timing). The warden's model is `Primitive`, so nothing else
+    // ever writes `ModelAnchors` and the synthetic insert is the ONLY writer — the claim
+    // (a model's cortex empty beats the computed position) is kind-agnostic.
+    let warden = d.titan("warden").expect("warden");
+    let computed = d.titan_cortex_height_m(warden).expect("warden cortex height");
 
     // Far outside `aggro_radius_m`: `Idle` is the upright pose the heights are defined against.
-    spawn(&mut app, "husk", Vec3::new(0.0, 0.0, -200.0));
+    spawn(&mut app, "warden", Vec3::new(0.0, 0.0, -200.0));
     ticks(&mut app, 2);
     let root = the_titan(&mut app);
     let cortex = part_entity(&app, root, TitanPart::Cortex).expect("the rig has a cortex");

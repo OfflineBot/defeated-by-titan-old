@@ -1,0 +1,10 @@
+{
+  "name": "titan-weaver",
+  "geometry": "titan.ron:drawn_poses/titan_weaver",
+  "kind": "titan",
+  "size_class": "small",
+  "seed": 42005,
+  "facets": { "torso": 12, "limb": 8 },
+  "palette": { "skin": "brick_red..sand_brown", "nape_band": "roof_slate", "eyes": "char_black" },
+  "detail": { "nape_band": true, "eyes": true, "mottle": 0.45, "eye_size_u": 0.12, "eye_spread": 0.45, "eye_lift": 0.18 }
+}

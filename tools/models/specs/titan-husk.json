@@ -1,0 +1,10 @@
+{
+  "name": "titan-husk",
+  "geometry": "titan.ron:drawn_poses/titan_husk",
+  "kind": "titan",
+  "size_class": "medium",
+  "seed": 42001,
+  "facets": { "torso": 12, "limb": 8 },
+  "palette": { "skin": "sand_brown..brick_red", "nape_band": "roof_slate", "eyes": "char_black" },
+  "detail": { "nape_band": true, "eyes": true, "mottle": 0.12 }
+}

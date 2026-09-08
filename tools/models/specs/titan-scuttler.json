@@ -1,0 +1,10 @@
+{
+  "name": "titan-scuttler",
+  "geometry": "titan.ron:drawn_poses/titan_scuttler",
+  "kind": "titan",
+  "size_class": "small",
+  "seed": 42004,
+  "facets": { "torso": 12, "limb": 8 },
+  "palette": { "skin": "sand_brown..brick_red", "nape_band": "roof_slate", "eyes": "char_black" },
+  "detail": { "nape_band": true, "eyes": true, "mottle": 0.35, "eye_size_u": 0.16, "eye_spread": 0.6, "eye_lift": 0.05 }
+}

@@ -168,7 +168,7 @@
                      aggro_radius_m: 50.0,
                      sight_half_angle_deg: 115.0, hearing_radius_m: 40.0,
                      death_s: 1.0, health: 100.0, damage: 30.0,
-                     model: "titan_husk",
+                     model: "titan_errant",
                      // 35 degrees to each side, flipping every 0.9 s. He still closes —
                      // cos 35 deg = 0.82 of 6.5 m/s is 5.3 m/s straight at you — but he is
                      // never on the line you aimed at. That is the whole lesson: lead him.
@@ -196,7 +196,7 @@
                      aggro_radius_m: 60.0,
                      sight_half_angle_deg: 120.0, hearing_radius_m: 55.0,
                      death_s: 0.8, health: 60.0, damage: 18.0,
-                     model: "titan_husk",
+                     model: "titan_scuttler",
                      // The leap: 14 m/s carried through a 0.2 s `Strike` is 2.8 m of ground
                      // covered while the blow is already in the air, on top of an
                      // `attack_range_m` of 2.5. Sidestepping at range no longer works — the
@@ -222,7 +222,7 @@
                      aggro_radius_m: 50.0,
                      sight_half_angle_deg: 110.0, hearing_radius_m: 45.0,
                      death_s: 0.8, health: 70.0, damage: 22.0,
-                     model: "titan_husk",
+                     model: "titan_weaver",
                      // **The nape is shut except inside his own attack.** Not a roll with
                      // i-frames — a roll needs a `TitanState` arm and `shared/state.rs` is not
                      // this hand's this round — but the SAME lesson, and the smaller version of
@@ -333,7 +333,7 @@
                      aggro_radius_m: 45.0,
                      sight_half_angle_deg: 110.0, hearing_radius_m: 40.0,
                      death_s: 1.0, health: 100.0, damage: 30.0,
-                     model: "titan_husk",
+                     model: "titan_chorus",
                      // 9 m of flank offset, with the sign taken off the titan's own id — so
                      // chorus #1 aims 9 m to your left and chorus #2 aims 9 m to your right,
                      // and they close on you from two sides instead of stacking in one
@@ -478,5 +478,78 @@
         // is blocked by 1.4 cm of cortex x, see the art.ron row), so the box rig IS the
         // picture and the axis-centred capsules are honest. The day it binds, it needs a
         // pose here — tests/titan.rs::b042 fails loudly on a glb-bound titan model without one.
+        // ---- The four generated kinds (2026-09-08, Q-096): poses within ±15 % of the
+        // husk proportions, limb length within the class silhouette, cortex_y exactly the
+        // class value 8.9. Kind identity is pose + palette + head detail. Each row is the
+        // hit truth its generated glb was BUILT from (tools/models/, gate: accept.py —
+        // flesh ≤ 0.05 m, air ≤ 0.10 m, captured PASS tables in FIND-234).
+        "titan_errant": (
+            cortex_y: 8.9,
+            capsules: [
+                (part: "torso",      radius: 0.58, a: (0.00, 5.10,  0.10), b: ( 0.00, 8.20, -0.50)),
+                (part: "head",       radius: 0.44, a: (0.00, 9.32, -0.08), b: (-0.06, 9.60, -0.80)),
+                (part: "arm_left_upper",  radius: 0.20, a: (-0.75, 8.10, -0.35), b: (-0.95, 6.15, -1.00)),
+                (part: "arm_left_lower",  radius: 0.17, a: (-0.95, 6.05, -1.00), b: (-0.88, 3.95, -1.62)),
+                (part: "arm_right_upper", radius: 0.20, a: ( 0.75, 8.05, -0.45), b: ( 1.00, 5.80,  0.20)),
+                (part: "arm_right_lower", radius: 0.17, a: ( 0.98, 5.75,  0.22), b: ( 0.92, 3.85,  0.80)),
+                (part: "hand_left",  radius: 0.26, a: (-0.90, 3.90, -1.62), b: (-0.85, 2.95, -1.85)),
+                (part: "hand_right", radius: 0.25, a: ( 0.98, 3.80,  0.78), b: ( 0.95, 2.90,  0.98)),
+                (part: "leg_left",   radius: 0.32, a: (-0.36, 5.30, -0.05), b: (-0.40, 0.50, -0.90)),
+                (part: "leg_right",  radius: 0.30, a: ( 0.40, 5.30,  0.15), b: ( 0.52, 0.50,  0.82)),
+                (part: "foot_left",  radius: 0.26, a: (-0.41, 0.28, -0.48), b: (-0.40, 0.28, -1.70)),
+                (part: "foot_right", radius: 0.27, a: ( 0.55, 0.29, -0.10), b: ( 0.55, 0.29,  1.20)),
+            ],
+        ),
+        "titan_chorus": (
+            cortex_y: 8.9,
+            capsules: [
+                (part: "torso",      radius: 0.68, a: (0.00, 5.05,  0.02), b: ( 0.00, 8.25, -0.42)),
+                (part: "head",       radius: 0.55, a: (0.00, 9.26, -0.02), b: ( 0.00, 9.48, -0.62)),
+                (part: "arm_left_upper",  radius: 0.23, a: (-0.92, 8.10, -0.30), b: (-1.10, 6.05, -0.42)),
+                (part: "arm_left_lower",  radius: 0.19, a: (-1.10, 5.95, -0.42), b: (-1.04, 3.85, -0.55)),
+                (part: "arm_right_upper", radius: 0.23, a: ( 0.92, 8.10, -0.30), b: ( 1.10, 6.05, -0.42)),
+                (part: "arm_right_lower", radius: 0.19, a: ( 1.10, 5.95, -0.42), b: ( 1.04, 3.85, -0.55)),
+                (part: "hand_left",  radius: 0.29, a: (-1.06, 3.80, -0.55), b: (-1.02, 2.85, -0.62)),
+                (part: "hand_right", radius: 0.29, a: ( 1.06, 3.80, -0.55), b: ( 1.02, 2.85, -0.62)),
+                (part: "leg_left",   radius: 0.35, a: (-0.48, 5.25,  0.02), b: (-0.55, 0.50, -0.15)),
+                (part: "leg_right",  radius: 0.35, a: ( 0.48, 5.25,  0.02), b: ( 0.55, 0.50, -0.15)),
+                (part: "foot_left",  radius: 0.28, a: (-0.56, 0.30,  0.15), b: (-0.55, 0.30, -1.05)),
+                (part: "foot_right", radius: 0.28, a: ( 0.56, 0.30,  0.15), b: ( 0.55, 0.30, -1.05)),
+            ],
+        ),
+        "titan_scuttler": (
+            cortex_y: 8.9,
+            capsules: [
+                (part: "torso",      radius: 0.70, a: (0.00, 5.15,  0.14), b: ( 0.00, 8.15, -0.48)),
+                (part: "head",       radius: 0.54, a: (0.00, 9.40, -0.05), b: ( 0.00, 9.58, -0.66)),
+                (part: "arm_left_upper",  radius: 0.24, a: (-0.95, 8.00, -0.45), b: (-1.20, 6.00, -1.00)),
+                (part: "arm_left_lower",  radius: 0.20, a: (-1.20, 5.90, -1.00), b: (-1.10, 3.80, -1.60)),
+                (part: "arm_right_upper", radius: 0.24, a: ( 0.95, 8.00, -0.45), b: ( 1.20, 6.00, -1.00)),
+                (part: "arm_right_lower", radius: 0.20, a: ( 1.20, 5.90, -1.00), b: ( 1.10, 3.80, -1.60)),
+                (part: "hand_left",  radius: 0.30, a: (-1.12, 3.75, -1.60), b: (-1.05, 2.80, -1.85)),
+                (part: "hand_right", radius: 0.30, a: ( 1.12, 3.75, -1.60), b: ( 1.05, 2.80, -1.85)),
+                (part: "leg_left",   radius: 0.36, a: (-0.50, 5.30,  0.05), b: (-0.62, 0.50, -0.35)),
+                (part: "leg_right",  radius: 0.36, a: ( 0.50, 5.30,  0.05), b: ( 0.62, 0.50, -0.35)),
+                (part: "foot_left",  radius: 0.28, a: (-0.66, 0.30,  0.05), b: (-0.78, 0.30, -1.30)),
+                (part: "foot_right", radius: 0.28, a: ( 0.66, 0.30,  0.05), b: ( 0.78, 0.30, -1.30)),
+            ],
+        ),
+        "titan_weaver": (
+            cortex_y: 8.9,
+            capsules: [
+                (part: "torso",      radius: 0.60, a: (0.00, 5.10,  0.06), b: ( 0.00, 8.22, -0.44)),
+                (part: "head",       radius: 0.47, a: (0.00, 9.36, -0.04), b: (-0.08, 9.62, -0.70)),
+                (part: "arm_left_upper",  radius: 0.21, a: (-0.80, 8.10, -0.40), b: (-1.05, 6.10, -0.85)),
+                (part: "arm_left_lower",  radius: 0.18, a: (-1.05, 6.00, -0.85), b: (-0.98, 3.90, -1.45)),
+                (part: "arm_right_upper", radius: 0.21, a: ( 0.80, 8.05, -0.10), b: ( 1.05, 5.85,  0.75)),
+                (part: "arm_right_lower", radius: 0.18, a: ( 1.05, 5.80,  0.75), b: ( 0.95, 3.85,  1.15)),
+                (part: "hand_left",  radius: 0.27, a: (-1.00, 3.85, -1.45), b: (-0.95, 2.90, -1.70)),
+                (part: "hand_right", radius: 0.27, a: ( 0.97, 3.80,  1.15), b: ( 0.93, 2.95,  1.32)),
+                (part: "leg_left",   radius: 0.31, a: (-0.38, 5.30, -0.08), b: (-0.42, 0.50, -1.00)),
+                (part: "leg_right",  radius: 0.31, a: ( 0.42, 5.30,  0.14), b: ( 0.50, 0.50,  0.60)),
+                (part: "foot_left",  radius: 0.27, a: (-0.44, 0.29, -0.55), b: (-0.43, 0.29, -1.75)),
+                (part: "foot_right", radius: 0.27, a: ( 0.52, 0.29, -0.10), b: ( 0.52, 0.29,  1.05)),
+            ],
+        ),
     },
 )

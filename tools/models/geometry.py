@@ -55,7 +55,11 @@ def mid_radius_band(n: int) -> float:
 
 def _emit(mesh: Mesh, loop: list, uv, interior) -> None:
     """One flat convex face from a vertex loop (3 or 4 points), duplicated verts, one
-    face normal, winding fixed against `interior` (a point inside the solid)."""
+    face normal, winding fixed against `interior` (a point inside the solid).
+
+    `uv` is a flat (u, v) tuple OR a zero-argument callable returning one — the callable
+    is drawn ONCE PER FACE (after the degeneracy check), which is how per-face palette
+    mottling stays deterministic: the caller seeds the RNG, the face order is fixed."""
     verts, normals, uvs, indices = mesh
     a, b, c = loop[0], loop[1], loop[2]
     ux, uy, uz = (b[0] - a[0], b[1] - a[1], b[2] - a[2])
@@ -64,6 +68,8 @@ def _emit(mesh: Mesh, loop: list, uv, interior) -> None:
     length = math.sqrt(nx * nx + ny * ny + nz * nz)
     if length < 1e-12:
         return  # degenerate (a loft ring collapsed to a point) — nothing to draw
+    if callable(uv):
+        uv = uv()
     nx, ny, nz = nx / length, ny / length, nz / length
     cx = sum(p[0] for p in loop) / len(loop)
     cy = sum(p[1] for p in loop) / len(loop)
@@ -237,6 +243,232 @@ def box(sx: float, sy: float, sz: float, uv, edge_break_m: float = 0.0) -> Mesh:
 
     for sgn in signs:  # 8 corner triangles
         _emit(mesh, [corner_point(sgn, a) for a in range(3)], uv, interior)
+    return mesh
+
+
+# ---------------------------------------------------------------------------
+# oriented capsules — the titan scheme's primitive (a drawn_poses row is capsules)
+# ---------------------------------------------------------------------------
+
+
+def _align_y(axis: tuple[float, float, float]) -> list[list[float]]:
+    """The rotation matrix (rows) taking +Y onto the unit vector `axis` (Rodrigues)."""
+    dx, dy, dz = axis
+    if dy > 1.0 - 1e-12:
+        return [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    if dy < -1.0 + 1e-12:
+        return [[1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, -1.0]]
+    # v = y × d = (dz, 0, -dx), c = dy; R = I + [v]x + [v]x^2 * (1-c)/|v|^2
+    vx, vy, vz = dz, 0.0, -dx
+    k = (1.0 - dy) / (vx * vx + vz * vz)
+    return [
+        [1.0 - k * vz * vz, -vz, k * vx * vz],
+        [vz, 1.0 - k * (vx * vx + vz * vz), -vx],
+        [k * vx * vz, vx, 1.0 - k * vx * vx],
+    ]
+
+
+def _apply(R: list[list[float]], p: tuple) -> tuple:
+    return (
+        R[0][0] * p[0] + R[0][1] * p[1] + R[0][2] * p[2],
+        R[1][0] * p[0] + R[1][1] * p[1] + R[1][2] * p[2],
+        R[2][0] * p[0] + R[2][1] * p[1] + R[2][2] * p[2],
+    )
+
+
+def rotate(mesh: Mesh, R: list[list[float]]) -> Mesh:
+    """Rotate a mesh by a 3x3 matrix — vertices AND normals (pure rotation, so the
+    inverse-transpose is the matrix itself)."""
+    verts, normals, uvs, indices = mesh
+    tv, tn = list(verts), list(normals)
+    for i in range(0, len(tv), 3):
+        tv[i], tv[i + 1], tv[i + 2] = _apply(R, (tv[i], tv[i + 1], tv[i + 2]))
+        tn[i], tn[i + 1], tn[i + 2] = _apply(R, (tn[i], tn[i + 1], tn[i + 2]))
+    return (tv, tn, list(uvs), list(indices))
+
+
+def capsule_between(
+    a: tuple,
+    b: tuple,
+    radius: float,
+    n: int,
+    uv,
+    cap_rings: int = 6,
+    max_span: float = 0.12,
+    bands: tuple = (),
+) -> Mesh:
+    """A faceted capsule from `a` to `b` (sphere caps beyond both ends), mid-radius rule
+    as in `capsule()`. Two additions over the vertical primitive:
+
+    - SUBDIVISION: the cylinder wall is split into spans of at most `max_span` — not for
+      looks (flat shading hides it) but for the gate's instrument: `accept.py` measures
+      registering air against nearest MESH SAMPLES, 10 per triangle, and one 3-unit-tall
+      quad would leave sample gaps wider than the whole air budget.
+    - BANDS: `(lo, hi, r_scale, band_uv)` in LOCAL axis coordinates (0 at `a`, |b-a| at
+      `b`): the wall between lo and hi is authored at `mid_radius * r_scale` with its own
+      uv — the recessed Cortex-side band. A recess is a cut inward, so it can only eat air
+      budget, never flesh budget; the caller keeps `1 - r_scale` small enough for the
+      gate. Step rings (horizontal annuli) close the recess at both edges.
+    """
+    ax, ay, az = (b[0] - a[0], b[1] - a[1], b[2] - a[2])
+    length = math.sqrt(ax * ax + ay * ay + az * az)
+    if length < 1e-9:
+        raise ValueError(f"capsule_between: a == b at {a}")
+    axis = (ax / length, ay / length, az / length)
+    s_az = mid_radius(1.0, n)
+    # cap ring count scales with the radius so cap sample density matches the walls'
+    cap_rings = max(cap_rings, int(math.ceil((math.pi / 2.0) * radius / max_span)))
+    half_step = (math.pi / 2.0) / cap_rings / 2.0
+    s_pol = 2.0 / (1.0 + math.cos(half_step))
+    h2 = length / 2.0
+
+    def wall_r(y: float) -> tuple[float, object]:
+        """(authored radius, uv) of the cylinder wall at local height y (centered)."""
+        t = y + h2  # 0 at `a`
+        for lo, hi, scale, band_uv in bands:
+            if lo - 1e-9 <= t <= hi + 1e-9:
+                return (s_az * radius * scale, band_uv)
+        return (s_az * radius, uv)
+
+    # profile: (y, r, uv) — poles and caps first, then the subdivided/banded cylinder.
+    profile: list[tuple[float, float, object]] = [(-(h2 + s_pol * radius), 0.0, uv)]
+    for j in range(cap_rings - 1, 0, -1):
+        ang = (math.pi / 2.0) * j / cap_rings
+        profile.append(
+            (-(h2 + s_pol * radius * math.sin(ang)), s_az * s_pol * radius * math.cos(ang), uv)
+        )
+    cuts = {-h2, h2}  # band lo/hi are t in [0, length]; local y is t - h2
+    for lo, hi, _scale, _buv in bands:
+        cuts.add(max(-h2, min(h2, lo - h2)))
+        cuts.add(max(-h2, min(h2, hi - h2)))
+    edges = sorted(cuts)
+    ys: list[float] = []
+    for y0, y1 in zip(edges, edges[1:]):
+        spans = max(1, int(math.ceil((y1 - y0) / max_span)))
+        for s in range(spans):
+            ys.append(y0 + (y1 - y0) * s / spans)
+    ys.append(h2)
+    prev_r = None
+    for y in ys:
+        r_here, uv_here = wall_r(y + 1e-6 if y < h2 else y - 1e-6)
+        if prev_r is not None and abs(prev_r - r_here) > 1e-9:
+            # a band edge: close the step with a ring at the SAME height (the horizontal
+            # annulus gets the deeper side's uv via the span rule below)
+            below_r, below_uv = wall_r(y - 1e-6)
+            profile.append((y, below_r, below_uv))
+            profile.append((y, r_here, uv_here))
+        else:
+            profile.append((y, r_here, uv_here))
+        prev_r = r_here
+    for j in range(1, cap_rings):
+        ang = (math.pi / 2.0) * j / cap_rings
+        profile.append(
+            (h2 + s_pol * radius * math.sin(ang), s_az * s_pol * radius * math.cos(ang), uv)
+        )
+    profile.append((h2 + s_pol * radius, 0.0, uv))
+
+    mesh = _new()
+    interior = (0.0, 0.0, 0.0)
+
+    def lerp(p, q, t):
+        return (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t)
+
+    for (y0, r0, uv0), (y1, r1, uv1) in zip(profile, profile[1:]):
+        if r0 == 0.0 and r1 == 0.0:
+            continue
+        if abs(y1 - y0) < 1e-9 and abs(r1 - r0) < 1e-9:
+            continue
+        span_uv = uv1 if r1 < r0 or y1 > y0 else uv0
+        # A step ring (same height, radius jump) is where the solid stops being convex:
+        # the bottom edge of a recess is exposed UPWARD, the top edge DOWNWARD. The
+        # convex interior at the origin would orient the top edge wrong, so step rings
+        # get an interior on the correct side instead.
+        span_interior = interior
+        if abs(y1 - y0) < 1e-9:
+            span_interior = (0.0, y0 - 1.0, 0.0) if r1 < r0 else (0.0, y0 + 1.0, 0.0)
+        # azimuthal COPLANAR subdivision: the gate measures registering air against
+        # nearest mesh samples (10 per triangle), so a wide facet is cut into sub-quads
+        # in the SAME plane — silhouette and shading unchanged, sample density not.
+        chord = max(r0, r1) * 2.0 * math.sin(math.pi / n)
+        m = max(1, int(math.ceil(chord / max_span)))
+        for k in range(n):
+            t0, t1 = 2.0 * math.pi * k / n, 2.0 * math.pi * (k + 1) / n
+            c0, s0 = math.cos(t0), math.sin(t0)
+            c1, s1 = math.cos(t1), math.sin(t1)
+            L0, L1 = (r0 * c0, y0, r0 * s0), (r0 * c1, y0, r0 * s1)
+            U0, U1 = (r1 * c0, y1, r1 * s0), (r1 * c1, y1, r1 * s1)
+            face_uv = span_uv() if callable(span_uv) else span_uv  # one color per FACET
+            for j in range(m):
+                f0, f1 = j / m, (j + 1) / m
+                l0, l1 = lerp(L0, L1, f0), lerp(L0, L1, f1)
+                u0, u1 = lerp(U0, U1, f0), lerp(U0, U1, f1)
+                if r0 == 0.0:
+                    _emit(mesh, [L0, u1, u0], face_uv, span_interior)
+                elif r1 == 0.0:
+                    _emit(mesh, [l0, l1, U0], face_uv, span_interior)
+                else:
+                    _emit(mesh, [l0, l1, u1, u0], face_uv, span_interior)
+
+    mesh = rotate(mesh, _align_y(axis))
+    mid = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0, (a[2] + b[2]) / 2.0)
+    return translate(mesh, *mid)
+
+
+def cylinder_patch(
+    axis_x: float,
+    y_lo: float,
+    y_hi: float,
+    axis_z: float,
+    radius: float,
+    az_center: float,
+    az_half: float,
+    uv,
+    n_az: int = 6,
+    n_y: int = 3,
+) -> Mesh:
+    """A curved rectangular patch hugging a vertical cylinder (axis at `axis_x`/`axis_z`,
+    azimuth 0 at +Z): the painted cortex plate on the Cortex-side. Emitted as an `n_az` x `n_y`
+    grid of small outward quads, so each flat sub-quad stays within a whisker of the
+    cylinder — the caller budgets `radius` against the flesh band, the grid keeps the
+    corner error out of it."""
+    mesh = _new()
+    for j in range(n_y):
+        ya = y_lo + (y_hi - y_lo) * j / n_y
+        yb = y_lo + (y_hi - y_lo) * (j + 1) / n_y
+        for i in range(n_az):
+            ta = az_center - az_half + 2.0 * az_half * i / n_az
+            tb = az_center - az_half + 2.0 * az_half * (i + 1) / n_az
+            xa, za = axis_x + radius * math.sin(ta), axis_z + radius * math.cos(ta)
+            xb, zb = axis_x + radius * math.sin(tb), axis_z + radius * math.cos(tb)
+            loop = [(xa, ya, za), (xb, ya, zb), (xb, yb, zb), (xa, yb, za)]
+            _emit(mesh, loop, uv, (axis_x, (ya + yb) / 2.0, axis_z))
+    return mesh
+
+
+def tile(center: tuple, out_dir: tuple, up_hint: tuple, w: float, h: float, uv) -> Mesh:
+    """One outward-facing quad — an eye cell. `center` is the tile's middle, `out_dir`
+    the exterior direction (normalized here), `up_hint` roughly the tile's up. The tile
+    is flat, so its corners sit slightly further from a curved surface than its center —
+    the caller budgets that against the flesh band."""
+    ox, oy, oz = out_dir
+    L = math.sqrt(ox * ox + oy * oy + oz * oz)
+    ox, oy, oz = ox / L, oy / L, oz / L
+    ux, uy, uz = up_hint
+    d = ux * ox + uy * oy + uz * oz
+    ux, uy, uz = ux - d * ox, uy - d * oy, uz - d * oz
+    L = math.sqrt(ux * ux + uy * uy + uz * uz)
+    ux, uy, uz = ux / L, uy / L, uz / L
+    rx, ry, rz = (uy * oz - uz * oy, uz * ox - ux * oz, ux * oy - uy * ox)
+    hw, hh = w / 2.0, h / 2.0
+    corners = [
+        (center[0] - rx * hw - ux * hh, center[1] - ry * hw - uy * hh, center[2] - rz * hw - uz * hh),
+        (center[0] + rx * hw - ux * hh, center[1] + ry * hw - uy * hh, center[2] + rz * hw - uz * hh),
+        (center[0] + rx * hw + ux * hh, center[1] + ry * hw + uy * hh, center[2] + rz * hw + uz * hh),
+        (center[0] - rx * hw + ux * hh, center[1] - ry * hw + uy * hh, center[2] - rz * hw + uz * hh),
+    ]
+    mesh = _new()
+    interior = (center[0] - ox, center[1] - oy, center[2] - oz)
+    _emit(mesh, corners, uv, interior)
     return mesh
 
 

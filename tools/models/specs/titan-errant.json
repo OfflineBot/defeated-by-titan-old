@@ -1,0 +1,10 @@
+{
+  "name": "titan-errant",
+  "geometry": "titan.ron:drawn_poses/titan_errant",
+  "kind": "titan",
+  "size_class": "medium",
+  "seed": 42002,
+  "facets": { "torso": 12, "limb": 8 },
+  "palette": { "skin": "brick_red..sand_brown", "nape_band": "roof_slate", "eyes": "char_black" },
+  "detail": { "nape_band": true, "eyes": true, "mottle": 0.22, "eye_size_u": 0.11, "eye_spread": 0.38 }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "banner-long",
+  "geometry": "art.ron:hulls/banner_long",
+  "kind": "prop",
+  "seed": 1330,
+  "facets": {},
+  "palette": { "cloth": "brick_red", "pole": "timber_dark", "bracket": "iron_grey" },
+  "detail": { "edge_break_m": 0.02 }
+}
