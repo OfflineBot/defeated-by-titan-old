@@ -713,11 +713,41 @@ fn f175_the_field_of_view_setting_reaches_the_camera() {
 
     app.world_mut().resource_mut::<PlayerSettings>().nudge_fov(2.0);
     let asked = app.world().resource::<PlayerSettings>().fov_deg;
+    // ⚠️ Since F-017 the lens CHASES the setting at `fov_return_deg_s` on the FRAME clock —
+    // a slider step is no longer a same-update jump. This assert block used to demand
+    // 1e-6 after ONE update and passed only when a loaded machine stretched that update
+    // past the 2°/25°/s = 80 ms the slew needs: an inverted flake, green under suite load,
+    // red solo (measured 2026-09-08, 3/3 solo red on an idle box). The contract now is the
+    // slew's own: one update moves the lens TOWARD the target, and it converges within a
+    // real-time budget derived from the rate (80 ms slew + generous scheduling slack).
     app.update();
-    let after = fov_of(&mut app);
+    let one_step = fov_of(&mut app);
+    assert!(
+        one_step > seeded && one_step <= asked.to_radians() + 1e-6,
+        "one update has to move the lens toward the asked fov and never past it \
+         (seeded {seeded}, one step {one_step}, asked {} rad)",
+        asked.to_radians()
+    );
+    let budget = std::time::Instant::now();
+    let mut after = one_step;
+    while (after - asked.to_radians()).abs() >= 1e-6 {
+        assert!(
+            budget.elapsed().as_secs_f32() < 1.0,
+            "the lens did not converge on the setting within 1 s of real time — the slew \
+             needs 2°/{} = 0.08 s, so a whole second is a stuck chase, not a slow one",
+            "25°/s"
+        );
+        app.update();
+        let next = fov_of(&mut app);
+        assert!(
+            next + 1e-9 >= after,
+            "the chase reversed: {after} rad then {next} rad — the slew must be monotone \
+             toward a fixed target"
+        );
+        after = next;
+    }
     println!("fov {want} -> {asked} deg, camera {seeded} -> {after} rad");
     assert!(asked > want, "two steps up the slider have to move the number");
-    assert!((after - asked.to_radians()).abs() < 1e-6, "the camera did not follow the setting");
 }
 
 /// **The lobby is `missions.ron`, drawn.** One button per template, one per difficulty of the

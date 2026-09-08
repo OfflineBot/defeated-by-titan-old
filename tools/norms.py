@@ -459,7 +459,9 @@ def check_tests(b: Report) -> None:
         # anywhere in the 245 backlog rows (docs/PLAN-GAME.md §8) — there is no row for "the
         # game has a working mouse" or "UI reaches an offscreen image". Their evidence is
         # still evidence, and a picture that cannot be named cannot be filed.
-        if not re.match(r"^[ftbp]-?\d{1,3}[a-z]?-[a-z0-9-]+(-before|-after)?\.png$",
+        # `q` joined 2026-09-08: questions carry evidence pictures too (Q-097's model A/B),
+        # and the scripts corpus has used q-ids since q030 — the image rule just lagged it.
+        if not re.match(r"^[ftbpq]-?\d{1,3}[a-z]?-[a-z0-9-]+(-before|-after)?\.png$",
                         p.name):
             b.fail(f"{rel}: screenshot name does not match "
                    f"<f-id>-<short>[-before|-after].png (§10)")
