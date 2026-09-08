@@ -289,10 +289,12 @@ assert speed < 19.5      # rope alone. The graybox lane does 31.4; a street is a
 
 wait 0.1
 mark f003-street-wall
-assert height > 5.5      # ★ 5.931 — THE ARC BOTTOM, and it is 4.4 m over the pavement
-assert height < 6.4      # (measured at 1.500 in this street, by dropping into it). It comes
-                         # straight back up: 5.954 one tick later, so the bottom is real and
-                         # not a floor.
+assert height > 1.95     # ★ 2.414 since §5E (was 5.931): the ground under this street fell
+assert height < 2.85     # −1.000 → −4.959 in the corner-sampled field and the hooked
+                         # roof-cap anchor rode down with its house (2026-09-08 attribution,
+                         # terrain-redistribution class). The arc bottom now sits ~7.4 m
+                         # over the pavement — it comes straight back up one tick later, so
+                         # it is a real bottom, not a floor.
 assert speed < 8.0       # ⚠️ 7.033, and this bracket USED to read `< 1.0` for 0.205 m/s.
                          # The claim is the same one and it is still measured: **the arc ends
                          # against the facade of the house he hooked** — 18.909 -> 7.033 in a

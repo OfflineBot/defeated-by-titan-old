@@ -138,18 +138,30 @@ wait 1.5                # world, camera, meshes and the render pipelines come up
 # while the same W at the church (45, 1, -43) and on the boulevard (0, 2, 100) gave exactly
 # 6.000 m/s in the same run. **The runner was never broken; the lane's floor moved up under
 # the warp.** (docs/FINDINGS.md FIND-126.)
-warp 0 6 257.5          # dropped in from above the terrain and allowed to settle onto it
+warp 0 -2.5 257.5       # dropped in 1.85 m over the field and allowed to settle onto it.
+                        # Was `warp 0 6` — §5E's continuous field put the ground at −4.348
+                        # here and a 6 m drop was still sliding at the 0.8 s assert
+                        # (measured 6.292 m/s, the 2026-09-08 attribution round). And NOT
+                        # lower: a warp at −3.9 straddled the trimesh and tunneled through
+                        # (measured −15.06 and falling) — a warp must start WHOLLY above
+                        # the surface.
 look 0 0
 wait 0.8
-assert height > 2.0     # 2.400 — THE FLOOR OF THE LANE, and it used to read 0.050. This
-assert height < 2.9     # bracket is the terrain, and it is the first thing this file proves.
+assert height > -2.75   # −2.638 settled — THE FLOOR OF THE LANE (the height metric reads
+assert height < -2.50   # ~1.71 m above the field's −4.348 surface sample; both numbers
+                        # recorded). It has read 0.050 (flat slab), 2.400 (terraces),
+                        # −0.500 (first grass field) and now the §5E corner-sampled field:
+                        # this bracket is the terrain's biography, re-derived per
+                        # generation, never widened.
 assert speed < 0.5
 key W 1.5               # held LONGER than the wait below — a key that expires on the same
 wait 1.0                # tick as the measurement measures a player who has already let go
 mark f004-running
-assert speed > 6.8      # 7.042 m/s. ⚠️ `player.run_speed_m_s` is 6.000 and that is still what
-assert speed < 7.3      # he runs at — the extra 1.04 is the terrain: this stretch of lane
-                        # falls away under him and the descent is in the speed. The bracket
+assert speed > 6.05     # 6.159 m/s since §5E (was 7.042). ⚠️ `player.run_speed_m_s` is 6.000
+assert speed < 6.45     # and that is still what he runs at — the excess over 6.0 is the
+                        # terrain falling away under him, and the §5E field flattened this
+                        # stretch: the descent bonus shrank from +1.04 to +0.16 (2026-09-08
+                        # re-pin, terrain-redistribution class). The bracket
                         # was `5.9 .. 6.1` on flat graybox ground; it is the same claim about
                         # the same runner, measured on a floor that is no longer flat.
 wait 0.8
