@@ -2046,3 +2046,27 @@ Two traps out of the r7 repair after §5E:
    test borrowing the helper for JOINT/S-retreat/reel claims silently measures a
    rope-less world. The message is the missing half, and r7's fixture comment now names
    what the code reads.
+
+## FIND-233 — the restart round: five prop hulls land, the last two corpus moves get their line, and the street dam gets a name (2026-09-08)
+
+- **The five placed-prop hull rows are IN** (art.ron, from the preserved validate.py dict):
+  validator medians signpost 0.82→0.07 · lamp_post 0.26→0.10 · banner_long 0.43→0.07 ·
+  hand_cart 0.45→0.11 · market_stall 0.46→0.25; five in-game probes all ≤ 0.235 m from a
+  drawn face (best 0.002); pin test red-then-green. Honest residuals in the row comments:
+  the banner covers iron not cloth (p95 0.44 m — the model generator P2 target), the
+  stall open serving side is 0.75 m of air.
+- **f003-ashgate and f004-towers +1 are LINE-NAMED** by worktree A/B against the pre-§5E
+  commit: f003:292 (arc bottom 5.931→2.414, street ground fell −1.000→−4.959) and f004
+  ACT-0 settle (ground −0.500→−4.348, a 6 m warp still sliding at the assert tick) — both
+  terrain-redistribution, both re-pinned same day with the numbers in their comments
+  (f003 11/40, f004 12/31 — three terrain-class lines re-derived, the lane stack untouched
+  for the Q ruling). Re-pin lesson in the f004 header: a warp at −3.9 straddled the
+  trimesh and TUNNELED (−15.06 and falling) — a warp starts wholly above the surface.
+- **FIND-231 obstruction RESOLVED as terrain** (see Q-095): bell tower block_199 pin
+  pedestal, exactly −8.750 = −5·(0.35·5.0) at the corner band, oracle vs settled player
+  agreeing to 1 mm. The buried-house suspicion is refuted; a street-damming CLASS is
+  named instead (eight towers).
+- **Build-infra trap (foreign find):** a stale rlib with a lying fingerprint made
+  `cargo check --tests` green while `cargo test --no-run` failed with pre-§5E type errors;
+  `touch src/lib.rs` cleared it. If check and test disagree about one tree, suspect the
+  fingerprint, not the sources.

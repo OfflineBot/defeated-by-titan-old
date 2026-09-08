@@ -2352,3 +2352,17 @@ now). **Rollback / change:** one number — plus the coupled pair `max_rise_m �
 elevation_m` and a deeper `base_m` (64 / −60 measured working at 48). A middle value
 (~36) was NOT photographed; say a number and it can be shot the same way. If you pick 48,
 the house-burial question (plinth vs moat, FIND-231) needs a ruling first.
+
+## Q-095 — every tall landmark over a deep valley builds a terrain pedestal that dams its street: wanted? (2026-09-08, OPEN)
+
+FIND-231's −9.440 m street obstruction is RESOLVED and it is not a block: it is the L1
+lo-envelope cone of bell tower block_199 (maps.ron:1528) — the Pin classification
+(src/world/map.rs:1211-1229) holds landmark corners flat and the max_grade descent builds
+an exact pyramid pedestal around them; over a deep §5E valley that pedestal stands ~2.6 m
+proud of the street and dams the z=210 lane. All eight bell towers (maps.ron:1527-1533)
+and every future tall placed landmark do the same wherever they meet deep valley.
+**The choice:** (a) accept — pedestals read as deliberate earthworks under towers, and the
+walk climbs them; (b) street-aware aprons — landmark pins carve along the street axis so
+lanes stay open (a plan_terrain rule, not data). **ASSUMPTION the work continues under:
+(a) accept.** The w2 walk crosses one and holds; nothing else measurably breaks. Rollback:
+the Pin classification block named above is the one place an apron rule would go.
