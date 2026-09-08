@@ -525,12 +525,10 @@
         // sentry (0.68 x 1.81 x 0.62 figure, every envelope face within ~0.3 m of cloth).
         // The five placed props whose envelope DOES lie (signpost median offset 0.82 m,
         // lamp_post pole 0.21 m per side, banner_long a pole with no cloth, hand_cart
-        // 0.54 m off-centre, market_stall 0.5 m beside the counters) were measured and
-        // their rows validated, but are held back:
-        // tests/world.rs::f003_the_colliders_carry_the_half_edge_from_the_file requires
-        // every maps.ron placed block to still be a plain cuboid, and a hulls row turns
-        // its carriers into compounds. Landing them needs that check taught about placed
-        // compounds first — the numbers are in the B-043 round report.
+        // 0.54 m off-centre, market_stall 0.5 m beside the counters) were held back while
+        // tests/world.rs::f003_the_colliders_carry_the_half_edge_from_the_file required
+        // every maps.ron placed block to be a plain cuboid; that check learned placed
+        // compounds, and the five rows landed 2026-09-08 — they close this section.
 
         // a-089-ruine-dach-eingestuerzt — a collapsed-roof mound, 2.62 m. Full-footprint
         // base, two shrinking bands, crest at x -1.74..0.97 / z -2.11..-0.91.
@@ -699,6 +697,75 @@
             roof_rects: [],
         ),
 
+        // -------------------------------------------------------------------------------
+        // The five placed props (B-043 leftover), landed 2026-09-08 once
+        // tests/world.rs::f003_the_colliders_carry_the_half_edge_from_the_file learned to
+        // tolerate placed compounds. Same method and frame as every row above (authored
+        // metres, inward rounding, hull subset of the PLACED_DRESSING envelope). All five
+        // re-validated against their glb triangles on 2026-09-08, tools/fleet/validate.py:
+        // exposed-surface offset to the nearest drawn triangle, hull vs old envelope.
+
+        // a-087-marktstand-zeltdach — counters to y 1.94 inside the awning posts, then the
+        // tent roof block at full canopy spread. Validated: phantom med 0.46 -> 0.25,
+        // p95 0.80 -> 0.67, max 1.09 -> 0.84, coverage 100 %. The residual med is the tent
+        // roof: a pyramid inside a box, kept a box because a one-rect wedge has no volume.
+        "market_stall": (
+            walls: [
+                (min_m: (-1.57, 0.0, -1.48), max_m: (1.57, 1.94, 1.47)),
+                (min_m: (-2.00, 1.94, -1.70), max_m: (2.00, 2.90, 1.72)),
+            ],
+            roof_rects: [],
+        ),
+        // a-088-laterne-strasse — base plinth to 0.70, the 0.22 m pole, the lamp head from
+        // 2.80. Validated: phantom med 0.26 -> 0.10, p95 0.39 -> 0.33, max 0.40 -> 0.34,
+        // coverage 100 %. The old envelope was 0.21 m of air on every side of the pole.
+        "lamp_post": (
+            walls: [
+                (min_m: (-0.26, 0.0, -0.26), max_m: (0.26, 0.70, 0.26)),
+                (min_m: (-0.11, 0.70, -0.11), max_m: (0.11, 2.80, 0.11)),
+                (min_m: (-0.28, 2.80, -0.28), max_m: (0.28, 4.20, 0.28)),
+            ],
+            roof_rects: [],
+        ),
+        // a-088-wegweiser — base, the 0.16 m post, the small -z arm at 1.8..2.4, the long
+        // two-sided arm at 2.4..3.0, the top arm reaching +x only. The worst offender of
+        // the five: envelope med 0.82 (a 2.26 m box around a 0.16 m post). Validated:
+        // phantom med 0.82 -> 0.07, p95 1.21 -> 0.45, max 1.34 -> 0.49, coverage 100 %.
+        "signpost": (
+            walls: [
+                (min_m: (-0.22, 0.0, -0.22), max_m: (0.22, 0.60, 0.22)),
+                (min_m: (-0.08, 0.60, -0.08), max_m: (0.08, 3.60, 0.08)),
+                (min_m: (-0.06, 1.80, -0.80), max_m: (0.07, 2.40, 0.06)),
+                (min_m: (-1.06, 2.40, -0.06), max_m: (1.12, 3.00, 0.06)),
+                (min_m: (-0.08, 3.00, -0.08), max_m: (1.12, 3.60, 0.08)),
+            ],
+            roof_rects: [],
+        ),
+        // a-133-banner-lang — the pole, the lower bracket band, the upper bracket band.
+        // Validated: phantom med 0.43 -> 0.07, p95 0.65 -> 0.44, max 0.50, coverage 100 %.
+        // ⚠️ HONEST RESIDUAL: the glb draws NO cloth plane — the two band boxes cover the
+        // bracket frames, and their faces sit up to 0.50 m (p95 0.44) from a drawn
+        // triangle. A bite there lands near iron, not on canvas; inventing a thinner cloth
+        // box would collide a surface the file does not draw.
+        "banner_long": (
+            walls: [
+                (min_m: (-0.07, 0.0, -0.08), max_m: (0.09, 4.20, 0.09)),
+                (min_m: (-0.49, 0.70, -0.15), max_m: (0.49, 1.40, 0.08)),
+                (min_m: (-0.58, 3.50, -0.08), max_m: (0.58, 4.20, 0.08)),
+            ],
+            roof_rects: [],
+        ),
+        // a-131-karren-intakt — the wheeled body (stops 0.95 m short of the +z end, where
+        // only the two shafts run on), the load bed above 1.20 running the full length
+        // over the shafts. Validated: phantom med 0.45 -> 0.11, p95 1.03 -> 0.49,
+        // max 1.14 -> 0.68, coverage 100 %. The envelope was 0.54 m off-centre air.
+        "hand_cart": (
+            walls: [
+                (min_m: (-0.97, 0.0, -1.60), max_m: (0.97, 1.20, 1.45)),
+                (min_m: (-0.74, 1.20, -1.35), max_m: (0.74, 1.80, 2.39)),
+            ],
+            roof_rects: [],
+        ),
     },
 
     // -----------------------------------------------------------------------------------

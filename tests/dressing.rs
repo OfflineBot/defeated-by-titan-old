@@ -469,3 +469,29 @@ fn b043_the_phantom_band_of_the_corner_ruin_is_gone() {
     );
 }
 
+#[test]
+fn b043_the_five_placed_props_carry_hull_rows() {
+    // ★ The B-043 leftover, landed 2026-09-08 once `tests/world.rs::
+    // f003_the_colliders_carry_the_half_edge_from_the_file` learned placed compounds. A
+    // deleted or misspelled row does not fail compilation — `BlockPlan::collider` silently
+    // reverts that class to the lying envelope (signpost median offset 0.82 m of air), so
+    // the row's existence is itself the fix and gets pinned by name. The subset-of-envelope
+    // and shape invariants are `b043_every_hull_stays_inside_its_class_envelope`; this only
+    // holds the door shut behind them.
+    //
+    // Fixture notes (fixtures.md #2): the code under test reads `art.ron: hulls` keyed by
+    // model name; this test varies the class name over the five landed rows and holds the
+    // loaded data constant. In-game probe evidence (2026-09-08, headless, assists off,
+    // anchor offset to the nearest drawn glb triangle): lamp_post 0.080 m, signpost
+    // 0.028 m, hand_cart 0.095 m, banner_long 0.235 m, market_stall 0.002 m (drawn front)
+    // against 0.749 m on its open serving side — the hull face is real where the mesh is.
+    let d = data();
+    for class in ["market_stall", "lamp_post", "signpost", "banner_long", "hand_cart"] {
+        assert!(
+            d.art.hulls.contains_key(class),
+            "art.ron: hulls[{class:?}] is gone — the class reverts to its envelope cuboid \
+             and its anchors move back into the air (B-043)"
+        );
+    }
+}
+
