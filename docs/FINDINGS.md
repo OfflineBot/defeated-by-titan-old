@@ -2070,3 +2070,72 @@ Two traps out of the r7 repair after §5E:
   `cargo check --tests` green while `cargo test --no-run` failed with pre-§5E type errors;
   `touch src/lib.rs` cleared it. If check and test disagree about one tree, suspect the
   fingerprint, not the sources.
+
+## FIND-234 — wave 2: five hit-true titan bodies, cloth on the banner, hull-true ruins — and what the gate numbers say (2026-09-08)
+
+Every generated file exists only WITH its captured accept.py PASS table (gate never
+loosened; the one REJECT — registering air 0.165 m — was fixed in the GENERATOR by
+coplanar subdivision, → 0.067 m):
+- **titan-husk** medium: flesh outside capsules max **0.040 m** (limit 0.05; the pack body
+  lies by 0.436), air worst **0.067 m** (limit 0.10), cortex dy **0.000**, stand 20.087
+  (±0.15), facing 0.020/0.889 u. PASSES both class scales. Deterministic sha 1943a5c4….
+- **titan-errant/chorus** (medium): flesh 0.034/0.049, air 0.067 each. 
+  **titan-scuttler/weaver** (small): flesh 0.019/0.015, air 0.028/0.026. All byte-stable.
+- **banner-long**: drawn CLOTH at last — worst plan-box face 0.089 m (limit 0.10; the
+  pack file is a pole in 0.44 m of iron-only air). **ruin-wall-corner/pillar**: outside
+  envelope 0/20 000, hull-to-mesh median 0.013/0.016, worst 0.030/0.029 — the
+  mis-centring class cannot exist in generated files.
+**Bound in the tree (Q-097):** the four variant kinds + the banner; husk and the two
+ruins stay pack (his eyes decide, images q097-*). rig.rs reads capsules per model name,
+so the four kinds now REGISTER on their own drawn poses; the neck segment stays the
+class's (f030 nape geometry untouched by construction).
+**Instrument honesty (A3's own words):** the registering-air metric is sample-density
+sensitive — the fix raised mesh sample density to feed the instrument; the true
+surface-to-surface distance was never the failing quantity. And the small kinds were
+never SEEN at small scale in-game (shadow binding fit them at medium) — first real look
+lands with this swap's gate.
+**Foreign find (world/terrain, unfixed):** parts of the ruin fields are BURIED under the
+§5E field — ruin_146_0 (13.5 m pillar) and ruin_140_1 show only grass at their stances;
+plan_blocks y vs the elevation surface disagree for part of the remnant scatter. Remnants
+predate the continuous field and never got the founding pass the houses got. Filed as the
+next world item; scripts/f-dressing legs at listed instances are the cheap probe.
+
+## FIND-235 — his vacuity verdict, measured: TRUE for ~15 tests, FALSE as a generalization (2026-09-08)
+
+The static sweep parsed all 1 053 tests (735 integration + 318 unit). Raw pattern flags:
+710 one-sided bounds, 104 `> 0`, 10 no-assert, 5 duplicate pairs — but hand-verifying the
+45 top-ranked gave a flag precision of **~10–15 %**: most hits are the suite's own
+mandated controls (fixture-health, reel-visibility, spec-one-sided claims like WCAG ≥ 3.0)
+or sit beside an exact bracket. The suite applies its fixtures.md taxonomy unusually
+consistently — deletion controls, skip-counting and anti-blind-spot asserts are pervasive.
+**The real tier, confirmed by hand (the kill-matrix's shooting order):** two benchmark
+tests whose only assert is "measured anything at all" (combat.rs:898, :2607) · a
+registration-count test subsumed by its content sibling (debug.rs:55) · four one-sided
+behavioural bounds (player.rs:570 steering, combat.rs:2867 damage-speed, mission.rs:1743
+lunge, vector_gas.rs:551 endurance) · one snap-breadth collapse (vector_hooks.rs:1454) ·
+**one jointless-harness claim**: `tests/player.rs::anchor_the_left_hook` (:910) has FIND-232's
+exact defect (no `HookAnchored` → no joint) and f006's swerve-on-the-rope claim borrows it
+— measured in a rope-less world. Full ranked table + per-class counts in the sweep report;
+`inventory.json` (scratchpad) holds every test's assert inventory for the matrix. Positive
+controls for the matrix: the ctrl_matrix/two-anchor family (mutations they MUST catch).
+
+## FIND-236 — the suite costs ~648 s and 93 % of it is four binaries; his lib-split is right but aimed at next year's bottleneck (2026-09-08)
+
+Measured solo per binary: vector_rope **385 s** (59 %) · titan 88 · player 76 · mission 53
+— together 602 of ~648 s; eighteen binaries share the rest. The root is named: **~1 812
+full-city App startups inside five matrix tests of vector_rope** (288+288+576×2 cells ×
+90 ticks + 84×120). The linker stopped being the wall on 2026-08-29 (mold, 29 s warm
+incremental; 21 binaries × 378 MB = 8 GB of links but only ~15-25 s of it).
+**Decisions:** (1) TIERING — `#[ignore = "full tier: …"]` on ~20 named tests, same binary
+for both tiers, `tools/test.sh --full` at the push gate (`--include-ignored --skip
+measure_ --skip probe_`), plus a guard test that every ignore reason says why. Projected
+fast tier 60–90 s; scoped inner loop ≤ 30 s. (2) CONSOLIDATION 22 → 7 binaries as
+directory targets (saves ~5.3 GB and ~15 links; the 6 GiB per-process cap under 16 test
+threads is the one unknown to MEASURE first — vector_rope alone sits at 2.93 GB RSS).
+(3) **The workspace split: NOT NOW** — 19 of 22 test files deliberately build the REAL
+app (a pinned decision, FIND-152's scar), so `cargo test -p vector` would run unit tests
+only and the 385 s would not move crates; bevy dominates every cold build regardless.
+Revisit trigger recorded: when domain-only rigs become the norm or the single-crate
+compile share dominates the warm 29 s. The allow-list DAG is verified split-ready
+(save→progress back-edge is a comment, not an import) — the crate plan exists the day the
+trigger fires.

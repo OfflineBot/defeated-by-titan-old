@@ -2379,3 +2379,23 @@ cortex_y stays exactly the class value (the whole scale chain hangs on it). tita
 kinds (warden/lurker/bellower) get the husk pose scaled with bulk — a taste pass is his
 whenever he looks. **Rollback:** the drawn_poses rows are data; re-authoring a pose is one
 row + one regeneration, nothing else moves.
+
+## Q-097 — which titan bodies do your eyes want? Generated kinds are LIVE, husk stayed pack (2026-09-08)
+
+Wave 2 generated all five kinds hit-true (flesh outside capsules ≤ 0.049 m, registering
+air ≤ 0.067 m — the pack body lies by 0.44 m). **ASSUMPTION executed:** the four
+kind-variants (errant/chorus/scuttler/weaver) now WEAR their generated bodies — they were
+identical husk-clones before, so per-kind identity (your §5A wish) plus hitbox honesty is
+a pure win even though the generated look is more capsule than sculpture. **husk kept the
+pack sculpt** — it reads anatomical (shoulder blades, fingers) where the generated body
+reads mannequin, and its pose-true capsules from B-042 already serve it. The honest words
+from the builder who looked: *"the generated husk holds the framing but reads as a capsule
+mannequin; the nape kill cue reads BETTER than the pack's (slate band + amber plate);
+variants are distinguishable at a glance by colour and stance."*
+**Your eyes decide with** (docs/images/): q097-full-before.png · q097-full-after.png ·
+q097-nape-before.png · q097-nape-after.png · q097-face.png · q097-errant.png ·
+q097-chorus.png · q097-scuttler.png · q097-weaver.png · q097-corner-before.png ·
+q097-corner-after.png · q097-pillar-before.png · q097-pillar-after.png ·
+q097-banner-before.png · q097-banner-after.png (the two generated ruins are BUILT but NOT
+bound — the pack versions read more ruined; swap is one art.ron line each if you prefer
+hull-true). **Rollback:** four model: lines in titan.ron + four rows in art.ron.

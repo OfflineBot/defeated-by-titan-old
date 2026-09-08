@@ -57,3 +57,40 @@ sanctioned** where they buy honest hitboxes; adapt the docs so they help; keep i
 
 Corpus 66 GREEN / 16 RED, every red attributed or booked (FIND-229/230/231). Full suite green.
 Tree clean at `0e83583`. The 16 red are the drift-debt stack riding on items 4 and 7 above.
+
+## §6A — his 2026-09-08 test-suite verdict, verbatim, and it gets an instrument
+
+> *"ein problem das ich onch sehe sind zu viele unnötigen tests die vermutlich so aufgebaut
+> sind, dass diese so oder so durchlaufen und nicht wirklich intensiv testen ob systeme
+> richtig laufen!"*
+
+He is measurably right at least once already: the two-arm blend guard passed the whole
+suite under a blend-destroying mutation (FIND-226 amendment) until an adversary proved it.
+The claim generalizes and gets the only honest instrument, in two passes:
+1. **Static vacuity sweep (read-only, runs now):** candidates by pattern — one-sided
+   bounds where the two-sided rule applies, asserts on what the fixture itself set,
+   brackets wide enough to pass any plausible value, tests with no behavioural assert,
+   near-duplicates. Output: a ranked candidate list with file:line, no deletions.
+2. **Mutation kill-matrix (after the model wave lands — rebuilds would poison its runs):**
+   ~20-30 one-line semantic breaks across the core systems (gates deleted, signs flipped,
+   scales zeroed — the `blend = direction` shape), each rebuilt and run against the
+   binaries that CLAIM to cover the file (+ --lib). A test that catches no mutation of its
+   own system is vacuous (strengthen or delete); a mutation no test catches is a coverage
+   hole (new test). The matrix is the deliverable; the suite shrinks or sharpens from
+   EVIDENCE, never from taste.
+
+His second half, minutes later, verbatim:
+
+> *"und diese tests die in angesporchen habe gehen immer recht lang und halten langzeitig
+> das projekt stark auf! eine idee wäre es in libs zu arbeiten oder die tests zu separieren
+> damit man dadurch nicht aufgehalten wird und unabhänig einfach und schnell testen kann!"*
+
+3. **Speed pass (his lib idea, measured before designed):** the suite is 181 s best-case
+   and the distribution is extreme — one binary (vector_rope) runs 385 s, the top four
+   carry ~90 % of the runtime, and each of the 25 integration binaries pays its own full
+   link of the game. Two levers, in order of cheapness: (a) TIERING — slow sim-heavy tests
+   behind `#[ignore]` with a gate-only full tier, plus consolidating the many tiny
+   binaries (each is a link); (b) THE WORKSPACE SPLIT he proposes — rule 3 already
+   enforces domain boundaries, so per-domain crates (`cargo test -p vector`) are the
+   architecture's own next step, not a rewrite. A scout measures the real costs (link vs
+   run per binary, cross-domain type knots like shared/data) before anything moves.
