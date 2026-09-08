@@ -2154,3 +2154,41 @@ ignore and a "flaky, look later" excuse each yield exactly one violation).
 **Open tail:** mission's fast tier holds at 39 s and the remainder sits OUTSIDE the
 candidate list (21 un-timed tests carry it) — its own timing round when it matters.
 Cosmetic: vector_rope.rs:2447's ignore reason says "a measurement" on a probe_-named fn.
+
+## FIND-238 — the kill-matrix executed: 19 mutations, 3 positive controls fired, and the vacuity tier is exactly three tests plus two holes (2026-09-08)
+
+His §6A claim, now measured by execution (17 min wall, every mutation restored
+sha-verified, green baseline first): **13 of 16 probe mutations were KILLED** by the suite
+— including every one aimed at the statically-flagged one-sided tests, which their
+SIBLINGS caught (the FIND-235 fortification verdict holds under fire). The instrument was
+eichen-first: all three positive controls fired (`blend = direction` → f176 red · S-sign
+flip → r7 red · hold_the_pair deleted → the full-tier two-anchor family red by name).
+**Confirmed vacuous (strengthen-or-delete, fix round live):** the two combat benchmark
+tests whose only assert is `found > 0` (×100 path work invisible) · the f006 swerve test,
+green at swerve ×0 AND ×100 — its bend is drive-lateral and its rope is FIND-232's
+jointless helper, confirmed by execution.
+**Coverage holes (each one missing test):** scuttler lunge ×10 survived mission+titan (no
+upper bracket on Strike travel) · **HOOK_TAP_MAX_TICKS 18→19 survived input+latch** — the
+latch fixture times its presses as `HOOK_TAP_MAX_TICKS + 6`, symbolically coupled to the
+constant under test: the fixtures.md same-variable-both-sides defect, live in the wild.
+**Also surfaced:** hold_the_pair has ZERO fast-tier coverage (P3 needed a 96 s named
+full-tier run) — a pure-fn n=2 tripwire joins the fix round. And cargo's cross-binary
+fail-fast means a KILLED verdict silences the binaries behind it — noted per row in the
+matrix table (task output), worth remembering when reading any multi-binary red.
+
+### FIND-238 · Hardening closed the tier the same day (2026-09-08 evening)
+
+All five fixes landed, each proven against its own mutation (red captured, restore
+sha1-verified, both tiers green): the two benchmarks now gate a MEDIAN per-cast cost
+(load-robust: the median ignores preempted batches; ×100 work → 438 µs vs ceiling 100) ·
+the swerve test runs on a REAL joint (FIND-232 guard inside: DistanceJoint == 1) with a
+two-sided A/B bracket that kills ×0 and ×100 · f058 gained the per-EPISODE travel ceiling
+(3.60 m; per-episode was mandatory — two honest strikes in 180 ticks would redden a total
+ceiling) · the tap boundary is pinned by LITERAL 18/19 (the symbolic coupling is named in
+the block comment) · hold_the_pair has a 0.01 s fast-tier tripwire (zero-budget refusal
+with disagreeing arms + proportional-split, run through shorten_ropes itself).
+**Tuning observation for his next playtest (rope feel, Q-077 family):** on a taut rope
+the swerve term contributes 0.724 of its 5.0 m/s ideal — the drive lateral carries 22.7
+of the 23.4 m/s bend; `air_accel_m_s2` is nearly feel-irrelevant while tethered.
+Honest limits: the cost ceilings assume no gate machine ≥20× slower (debian unmeasured);
+the brackets are tripwires, not tight specs (a swerve ×5 would pass).

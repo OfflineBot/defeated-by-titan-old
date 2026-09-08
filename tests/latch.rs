@@ -217,3 +217,86 @@ fn a_long_press_on_an_anchored_arm_releases_and_nothing_refires() {
         );
     }
 }
+
+// ---------------------------------------------------------------------------------------
+// The boundary itself, in LITERAL ticks — `docs/lessons/fixtures.md` rule 5, and FIND-238's
+// live specimen of rule 2's same-variable-on-both-sides defect: the kill-matrix moved
+// `HOOK_TAP_MAX_TICKS` from 18 to 19 and every test in this file stayed green, because every
+// press here timed itself as `HOOK_TAP_MAX_TICKS ± k` and MOVED WITH the constant under test.
+// So the two tests below spell the boundary as `18` and `19`, digits, on purpose: 18 ticks is
+// the 0.3 s at 60 Hz the constant's own doc promises, and if somebody retunes the constant,
+// these two tests going red IS the notice that the promise changed — they are re-typed by
+// hand then, never re-derived from the constant.
+// ---------------------------------------------------------------------------------------
+
+/// A re-tap held for EXACTLY 18 ticks is still a tap: the key-up re-fires, and the fresh rope
+/// anchors and STAYS.
+#[test]
+fn a_press_of_exactly_eighteen_ticks_is_a_tap_and_the_fresh_rope_stays() {
+    let mut app = app_over_the_boulevard();
+    let anchor_a = tap_and_anchor(&mut app, 3);
+    look(&mut app, 60.0, -35.0);
+    app.update();
+
+    key_q(&mut app, true);
+    for _ in 0..18 {
+        // 18, a literal — see the block comment above.
+        app.update();
+    }
+    key_q(&mut app, false);
+    app.update();
+    let state = left_arm(&mut app).state;
+    assert!(
+        matches!(state, HookState::Flying { .. }),
+        "a key-up 18 ticks (0.3 s at 60 Hz) after the press sits ON the tap boundary and has \
+         to fire fresh — measured: {state:?}"
+    );
+    for _ in 0..90 {
+        app.update();
+        if matches!(left_arm(&mut app).state, HookState::Anchored { .. }) {
+            break;
+        }
+    }
+    let anchor_b = left_arm(&mut app).tip_m;
+    assert!(
+        matches!(left_arm(&mut app).state, HookState::Anchored { .. })
+            && (anchor_b - anchor_a).length() > 2.0,
+        "the 18-tick tap's fresh rope has to anchor at the NEW aim and stay: B {anchor_b} \
+         against A {anchor_a}"
+    );
+    // And STAYS — the key is long up, so nothing may move the rope any more.
+    for _ in 0..60 {
+        app.update();
+    }
+    assert!(
+        matches!(left_arm(&mut app).state, HookState::Anchored { .. }),
+        "one second after the 18-tick tap anchored, the rope has to still be holding"
+    );
+}
+
+/// A press held for 19 ticks is past the boundary: the PURE release — the rope went at the
+/// press, the key-up fires nothing, ever.
+#[test]
+fn a_press_of_nineteen_ticks_is_past_the_boundary_and_is_the_pure_release() {
+    let mut app = app_over_the_boulevard();
+    tap_and_anchor(&mut app, 3);
+    look(&mut app, 60.0, -35.0);
+    app.update();
+
+    key_q(&mut app, true);
+    for _ in 0..19 {
+        // 19 = 18 + 1, both literals — the first count past the boundary. See the block
+        // comment above for why this must not be `HOOK_TAP_MAX_TICKS + 1`.
+        app.update();
+    }
+    key_q(&mut app, false);
+    for _ in 0..40 {
+        app.update();
+        let state = left_arm(&mut app).state;
+        assert!(
+            matches!(state, HookState::Idle | HookState::Retracting),
+            "a key-up 19 ticks after the press is one tick past the 0.3 s tap boundary and \
+             is the pure release — nothing may fire, measured: {state:?}"
+        );
+    }
+}

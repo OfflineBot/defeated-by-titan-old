@@ -845,3 +845,151 @@ pub fn register(app: &mut App) {
             .ambiguous_with_all(),
     );
 }
+
+// ---------------------------------------------------------------------------------------
+// 🔴 The FAST-tier tripwire on the pair rule (FIND-238): every behavioural test of
+// [`hold_the_pair`] lives in the FULL tier (`tests/vector_rope.rs`' matrices, ~96 s), so the
+// kill-matrix's P3 mutation — the call at pass 2 of [`shorten_ropes`] deleted — was invisible
+// to every run an inner loop performs. These tests run [`shorten_ropes`] itself, as a system,
+// over a hand-built two-rope world, so they die under `--lib` in milliseconds if either the
+// CALL or the rule behind it goes.
+//
+// ## What the rule reads and what the fixture varies (`docs/lessons/fixtures.md` rule 2)
+//
+// The rule reads: each arm's `limits.max` (via `Wanted::cur_m`), each arm's asked-for
+// `next_m` (reel rate × dt, take-up against the anchor distance), the two anchor positions
+// (their separation), and `vector.min_rope_m`. The fixture varies: the two lengths (11.5
+// against 45.5 — n = 2 and the arms DISAGREE, rule 4), the two reel rates (28 against 14 in
+// the proportional test), and the anchor separation (57.709 against 2.459 — the control that
+// moves). It holds constant: `min_rope_m` (3.0, guarded below against the file drifting under
+// the literals), dt (one 60 Hz step), and a body that keeps both ropes taut so the take-up
+// stays silent.
+// ---------------------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use bevy::ecs::system::RunSystemOnce;
+
+    use super::*;
+
+    /// A world with exactly what [`shorten_ropes`] queries: the data, one 60 Hz substep of
+    /// time, one player with per-side reel rates, one body, two anchors, two rope joints.
+    fn a_world_with_two_ropes(
+        body_m: Vec3,
+        anchors_m: [Vec3; 2],
+        lengths_m: [f32; 2],
+        reel_m_s: [f32; 2],
+    ) -> (World, [Entity; 2]) {
+        let data = crate::data::GameData::load(
+            &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/data"),
+        );
+        assert_eq!(
+            data.game.vector.min_rope_m, 3.0,
+            "every literal in these tests is derived for min_rope_m = 3.0 — re-derive them \
+             with the new file value instead of loosening a tolerance"
+        );
+        let mut world = World::new();
+        world.insert_resource(data);
+        let mut time = Time::<Substeps>::default();
+        time.advance_by(Duration::from_secs_f64(1.0 / 60.0));
+        world.insert_resource(time);
+        world.spawn((PlayerId(1), ReelSpeed { m_s: reel_m_s }));
+        let body = world.spawn(Position(body_m)).id();
+        let mut ropes = [Entity::PLACEHOLDER; 2];
+        for (i, side) in [Side::Left, Side::Right].into_iter().enumerate() {
+            let anchor = world.spawn(Position(anchors_m[i])).id();
+            let joint = DistanceJoint::new(anchor, body)
+                .with_local_anchor1(Vec3::ZERO)
+                .with_local_anchor2(Vec3::ZERO)
+                .with_limits(0.0, lengths_m[i]);
+            ropes[i] = world
+                .spawn((
+                    Rope { player: PlayerId(1), side, body: BodyId(7), anchor, body_entity: body },
+                    joint,
+                ))
+                .id();
+        }
+        (world, ropes)
+    }
+
+    fn enforced_m(world: &World, rope: Entity) -> f32 {
+        world.get::<DistanceJoint>(rope).expect("the rope keeps its joint").limits.max
+    }
+
+    /// `B-014`'s stand-off, as a statement about the WRITER: two taut ropes of 11.5 and
+    /// 45.5 m on anchors 57.709 m apart have `11.5 + 45.5 < 57.709 + 3`, so the pair budget
+    /// is zero and one substep of held reel must move NEITHER length by a millimetre. The
+    /// control halves the separation axis and nothing else: the same reel on anchors
+    /// 2.459 m apart takes its full step from both arms — so a green first half cannot be
+    /// a fixture in which the reel never ran at all (fixtures rule 1).
+    #[test]
+    fn a_pair_with_no_feasible_point_gives_the_reel_nothing_from_either_arm() {
+        // Body on the line between the anchors: distances 11.9 and 45.809, both ropes taut,
+        // the take-up silent — what is measured is the reel against the pair rule alone.
+        let (mut world, ropes) = a_world_with_two_ropes(
+            Vec3::ZERO,
+            [Vec3::new(-11.9, 0.0, 0.0), Vec3::new(45.809, 0.0, 0.0)],
+            [11.5, 45.5],
+            [28.0, 28.0],
+        );
+        world.run_system_once(shorten_ropes).expect("shorten_ropes runs");
+        let (left_m, right_m) = (enforced_m(&world, ropes[0]), enforced_m(&world, ropes[1]));
+        assert!(
+            (left_m - 11.5).abs() < 1e-6 && (right_m - 45.5).abs() < 1e-6,
+            "at zero pair budget the reel has to be refused ENTIRELY, both arms — measured \
+             {left_m:.6} and {right_m:.6} m against 11.5 and 45.5 (B-013: below the triangle \
+             inequality avian abandons one arm)"
+        );
+
+        // The control: the separation moves from 57.709 to 2.459 m and the same reel takes
+        // its full 28/60 m step from each arm. If this number does not move, the fixture
+        // above proved nothing.
+        let (mut near, ropes) = a_world_with_two_ropes(
+            Vec3::new(0.0, -50.0, 0.0),
+            [Vec3::new(-1.2, 0.0, 0.0), Vec3::new(1.259, 0.0, 0.0)],
+            [49.0, 48.0],
+            [28.0, 28.0],
+        );
+        near.run_system_once(shorten_ropes).expect("shorten_ropes runs");
+        let step_m = 28.0 / 60.0;
+        assert!(
+            (enforced_m(&near, ropes[0]) - (49.0 - step_m)).abs() < 1e-3
+                && (enforced_m(&near, ropes[1]) - (48.0 - step_m)).abs() < 1e-3,
+            "on near anchors the same reel takes its full step from both arms — the \
+             refusal above is the pair rule, not a reel that never ran"
+        );
+    }
+
+    /// A budget that covers PART of what the two arms asked for is split in proportion to
+    /// the asks — the arms disagree 2:1 on purpose, so an implementation that split evenly,
+    /// or served one arm first, moves both numbers.
+    #[test]
+    fn a_partial_pair_budget_is_split_in_proportion_to_what_each_arm_asked() {
+        // Body 8 m under the line: distances 14.339 and 46.502, lengths 14.3 and 46.5 —
+        // taut, take-up silent. Budget = 14.3 + 46.5 − 57.709 − 3 = 0.091 m; the asks are
+        // 28/60 and 14/60, together 0.7 m, so each arm keeps 13 % of its own ask.
+        let (mut world, ropes) = a_world_with_two_ropes(
+            Vec3::new(0.0, -8.0, 0.0),
+            [Vec3::new(-11.9, 0.0, 0.0), Vec3::new(45.809, 0.0, 0.0)],
+            [14.3, 46.5],
+            [28.0, 14.0],
+        );
+        world.run_system_once(shorten_ropes).expect("shorten_ropes runs");
+        let take_left_m = 14.3 - enforced_m(&world, ropes[0]);
+        let take_right_m = 46.5 - enforced_m(&world, ropes[1]);
+        // 0.091 is a LITERAL, not `pair_budget_m(...)` re-run here — the rule under test must
+        // not stand on both sides of its own assert (fixtures rule 2).
+        assert!(
+            (take_left_m + take_right_m - 0.091).abs() < 5e-3,
+            "the pair gave up {:.4} m where the budget is 0.091 — the give-back is not \
+             stopping at the triangle inequality's lens",
+            take_left_m + take_right_m
+        );
+        assert!(
+            take_right_m > 1e-4 && (take_left_m / take_right_m - 2.0).abs() < 0.01,
+            "the 28 m/s arm took {take_left_m:.4} m and the 14 m/s arm {take_right_m:.4} m — \
+             a partial budget is split in proportion to the asks, 2:1 here"
+        );
+    }
+}

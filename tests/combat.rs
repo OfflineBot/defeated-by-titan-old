@@ -912,46 +912,72 @@ fn f030_the_cost_of_one_thousand_casts() {
     let thickness = d.gear.blades.thickness_m;
     let me = player(&mut app);
 
+    // mean µs/cast · hits · MEDIAN batch µs/cast (the load-robust number the ceiling reads).
     #[derive(Resource, Default)]
-    struct Cost(f64, u32);
+    struct Cost(f64, u32, f64);
     app.insert_resource(Cost::default());
 
     app.world_mut()
         .run_system_once(move |space: SpatialQuery, mut out: ResMut<Cost>| {
             let mut found = 0u32;
+            let mut batch_us = [0.0f64; 20];
             let started = Instant::now();
-            for i in 0..1000 {
-                // A different sweep each time, so nothing is cached away: the pass walks the
-                // blade past the target the way a real one does.
-                let z = -2.0 + i as f32 * 0.004;
-                let offset = Vec3::new(0.0, 0.0, z);
-                // `|_, _| true` — the gate of `F-030`'s rear cone is not what this benchmark
-                // measures, and a rejected cortex would fall through to a SECOND cast and make
-                // the µs figure describe two casts on some iterations and one on others.
-                if sweep(
-                    &space,
-                    me,
-                    thickness,
-                    a + offset,
-                    b + offset,
-                    Vec3::new(0.0, 0.0, -0.5),
-                    |_, _| true,
-                )
-                .is_some()
-                {
-                    found += 1;
+            for batch in 0..20 {
+                let batch_started = Instant::now();
+                for k in 0..50 {
+                    let i = batch * 50 + k;
+                    // A different sweep each time, so nothing is cached away: the pass walks the
+                    // blade past the target the way a real one does.
+                    let z = -2.0 + i as f32 * 0.004;
+                    let offset = Vec3::new(0.0, 0.0, z);
+                    // `|_, _| true` — the gate of `F-030`'s rear cone is not what this benchmark
+                    // measures, and a rejected cortex would fall through to a SECOND cast and make
+                    // the µs figure describe two casts on some iterations and one on others.
+                    if sweep(
+                        &space,
+                        me,
+                        thickness,
+                        a + offset,
+                        b + offset,
+                        Vec3::new(0.0, 0.0, -0.5),
+                        |_, _| true,
+                    )
+                    .is_some()
+                    {
+                        found += 1;
+                    }
                 }
+                batch_us[batch] = batch_started.elapsed().as_secs_f64() * 1e6 / 50.0;
             }
             out.0 = started.elapsed().as_secs_f64() * 1e6 / 1000.0;
             out.1 = found;
+            batch_us.sort_by(f64::total_cmp);
+            out.2 = batch_us[10];
         })
         .expect("the benchmark system runs");
 
     let cost = app.world().resource::<Cost>();
     assert!(cost.1 > 0, "1000 casts found nothing at all — the benchmark measured an empty world");
+    // 🔴 **The ceiling, and why it is a median** (FIND-238: the kill-matrix put 99 extra casts
+    // inside `sweep` and this test stayed green — its only assert was `found > 0`, so ×100 of
+    // path work was invisible). What THIS test honestly measures is 4.98 µs median (2026-09-08,
+    // dev profile, machine B — the 0.21 µs in `src/world/index.rs` is a different instrument
+    // and world, kept only as the print's context). 100 µs is ×20 head-room over the measured
+    // median; the ×100 mutation lands near 500 µs and fails by 5×.
+    // Load-robust by construction, not by margin: the 1000 casts run as 20 batches of 50 and
+    // the ceiling reads the MEDIAN batch, so up to 9 batches may be hit by scheduler
+    // preemption or a neighbouring compile without moving the number — a real ×100 in the
+    // code moves every batch at once.
+    assert!(
+        cost.2 < 100.0,
+        "the median 50-cast batch costs {:.3} µs per cast against a measured 4.98 µs — the \
+         sweep is doing ~20× the path work it used to (ceiling 100 µs)",
+        cost.2
+    );
     println!(
-        "F-030 cost: {:.2} µs per cast over 1000 casts ({} of them hit) [debian]",
-        cost.0, cost.1
+        "F-030 cost: {:.2} µs per cast mean, {:.2} µs median batch, over 1000 casts ({} of \
+         them hit) [debian]",
+        cost.0, cost.2, cost.1
     );
 }
 
@@ -2620,8 +2646,9 @@ fn f032_the_cost_of_one_thousand_limb_refinements() {
     let top_m = rig.shoulder_m; // shoulder ...
     let drop_m = rig.shoulder_m - rig.leg_m * 0.5; // ... down to the knee
 
+    // mean µs/call · hits · MEDIAN batch µs/call (the load-robust number the ceiling reads).
     #[derive(Resource, Default)]
-    struct Cost(f64, u32);
+    struct Cost(f64, u32, f64);
     app.insert_resource(Cost::default());
 
     app.world_mut()
@@ -2630,33 +2657,56 @@ fn f032_the_cost_of_one_thousand_limb_refinements() {
                   limbs: Query<(&HitZoneOf, &GlobalTransform)>,
                   mut out: ResMut<Cost>| {
                 let mut found = 0u32;
+                let mut batch_us = [0.0f64; 20];
                 let started = Instant::now();
-                for i in 0..1000 {
-                    // A different blade every time, so nothing is cached: the hand walks down
-                    // the husk's right flank from the shoulder to the knee, which is the band
-                    // an arm zone and a leg zone share.
-                    let y = cortex.y - (rig.cortex_height_m - top_m)
-                        - i as f32 * drop_m / 1000.0;
-                    let a = Vec3::new(cortex.x + arm_x - 0.8, y, cortex.z);
-                    let b = a + Vec3::new(1.6, 0.0, 0.0);
-                    let blade = Collider::capsule_endpoints(thickness, a, b);
-                    if limb_zone(&children, &limbs, root, &blade, Vec3::new(0.0, -0.5, 0.0))
-                        .is_some()
-                    {
-                        found += 1;
+                for batch in 0..20 {
+                    let batch_started = Instant::now();
+                    for k in 0..50 {
+                        let i = batch * 50 + k;
+                        // A different blade every time, so nothing is cached: the hand walks
+                        // down the husk's right flank from the shoulder to the knee, which is
+                        // the band an arm zone and a leg zone share.
+                        let y = cortex.y - (rig.cortex_height_m - top_m)
+                            - i as f32 * drop_m / 1000.0;
+                        let a = Vec3::new(cortex.x + arm_x - 0.8, y, cortex.z);
+                        let b = a + Vec3::new(1.6, 0.0, 0.0);
+                        let blade = Collider::capsule_endpoints(thickness, a, b);
+                        if limb_zone(&children, &limbs, root, &blade, Vec3::new(0.0, -0.5, 0.0))
+                            .is_some()
+                        {
+                            found += 1;
+                        }
                     }
+                    batch_us[batch] = batch_started.elapsed().as_secs_f64() * 1e6 / 50.0;
                 }
                 out.0 = started.elapsed().as_secs_f64() * 1e6 / 1000.0;
                 out.1 = found;
+                batch_us.sort_by(f64::total_cmp);
+                out.2 = batch_us[10];
             },
         )
         .expect("the benchmark system runs");
 
     let cost = app.world().resource::<Cost>();
     assert!(cost.1 > 0, "1000 refinements found no limb at all — the benchmark measured nothing");
+    // 🔴 **The ceiling, and why it is a median** (FIND-238: the kill-matrix put 99 extra
+    // shape casts inside `limb_zone` and this test stayed green — its only assert was
+    // `found > 0`). One refinement — a capsule build plus four box `cast_shapes` — measures
+    // 4.16 µs median on this fixture (2026-09-08, dev profile, machine B). 80 µs keeps ×19 of
+    // head-room for honest slowdowns and a slower machine; the ×100 mutation lands near
+    // 400 µs and fails by 5×. Same load-robustness as `f030`'s cost test: the ceiling reads
+    // the MEDIAN of 20 batches of 50, so up to 9 preempted batches change nothing — only a
+    // cost that moved in the code moves every batch.
+    assert!(
+        cost.2 < 80.0,
+        "the median 50-call batch costs {:.3} µs per refinement against a measured 4.16 µs — \
+         `limb_zone` is doing ~20× the box work it used to (ceiling 80 µs)",
+        cost.2
+    );
     println!(
-        "F-032 cost: {:.2} µs per refinement over 1000 calls ({} of them found a limb) [debian]",
-        cost.0, cost.1
+        "F-032 cost: {:.2} µs per refinement mean, {:.2} µs median batch, over 1000 calls \
+         ({} of them found a limb) [debian]",
+        cost.0, cost.2, cost.1
     );
 }
 

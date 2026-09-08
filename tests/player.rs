@@ -37,8 +37,8 @@
 //! `scripts/t007-physics.txt`.
 
 use avian3d::prelude::{
-    Collider, Gravity, LinearVelocity, LockedAxes, MaxLinearSpeed, RigidBody, SleepingDisabled,
-    SubstepCount,
+    Collider, DistanceJoint, Gravity, LinearVelocity, LockedAxes, MaxLinearSpeed, RigidBody,
+    SleepingDisabled, SubstepCount,
 };
 use bevy::prelude::*;
 use bevy::time::TimeUpdateStrategy;
@@ -52,8 +52,9 @@ use defeated_by_titan::player::spawn_player;
 use defeated_by_titan::player::swim::{depth_in, swim_step};
 use defeated_by_titan::data::SwimTuning;
 use defeated_by_titan::shared::{
-    Block, BodyId, Buttons, Cli, Gas, Hook, HookState, IdCounter, Intent, LocalPlayer, MovementState,
-    LookOverride, PlayerId, RunAccel, Side, SpatialIndex, Submerged, Velocity, WaterVolume,
+    Block, BodyId, Buttons, Cli, Gas, Hook, HookAnchored, HookState, IdCounter, Intent,
+    LocalPlayer, MovementState, LookOverride, PlayerId, RunAccel, Side, SpatialIndex, Submerged,
+    Tick, Velocity, WaterVolume,
 };
 
 /// Builds the **real** app, headless, one simulation step per `update()`, on the map named
@@ -798,6 +799,42 @@ fn f006_touching_the_ground_at_speed_does_not_end_the_air_control() {
     );
 }
 
+/// One run of the `f006` swerve fixture on a **real rope**: launched at 30 m/s along +Z, the
+/// left hook anchored 35 m up and 15 m ahead through the full `HookAnchored` path (so
+/// `player::rope::attach_ropes` builds the `DistanceJoint` — the `taut_rope_then_hold` repair
+/// in `tests/input.rs`, not FIND-232's jointless helper), then half a second of held `D`.
+///
+/// The one thing the caller varies is `game.player.air_accel_m_s2` in this app's own copy of
+/// the data, as `factor` × the shipped value. Returns the sideways speed after the swerve and
+/// whether the hook is still anchored.
+fn swerve_bend_on_a_real_rope(air_accel_factor: f32) -> (f32, bool) {
+    let mut app = app();
+    let e = me(&mut app);
+    {
+        let mut data = app.world_mut().resource_mut::<GameData>();
+        data.game.player.air_accel_m_s2 *= air_accel_factor;
+    }
+    launch_on_the_ground(&mut app, e, 30.0);
+    let hand = at(&app, e) + Vec3::Y * data(&app).game.player.eye_height_m;
+    anchor_the_left_hook_with_a_real_rope(&mut app, e, hand + Vec3::new(0.0, 35.0, 15.0));
+    ticks(&mut app, 1);
+    assert_eq!(state(&app, e), MovementState::Tethered, "the rope has to be carrying him");
+    // Fixture health, and the exact FIND-232 defect this fixture repairs: a forced arm state
+    // without the `HookAnchored` message is a winch with NO rope. The joint has to exist, or
+    // every number below is measured in a rope-less world again.
+    let joints =
+        app.world_mut().query::<&DistanceJoint>().iter(app.world()).count();
+    assert_eq!(joints, 1, "the bite must have built exactly one DistanceJoint (FIND-232)");
+
+    hold(&mut app, KeyCode::KeyD); // yaw = 0 ⇒ D is +X, across the +Z the rope handed him
+    ticks(&mut app, 30);
+    release(&mut app, KeyCode::KeyD);
+
+    let hook = app.world().get::<Hook>(e).expect("the player carries a Hook");
+    let anchored = matches!(hook.arm(Side::Left).state, HookState::Anchored { .. });
+    (horizontal(&app, e).x, anchored)
+}
+
 #[test]
 fn f006_the_swerve_bends_the_flight_without_letting_go_of_the_hook() {
     // **`F-006`'s own acceptance sentence**, out of `docs/backlog/gameplay.ron`: *"Vier
@@ -805,28 +842,67 @@ fn f006_the_swerve_bends_the_flight_without_letting_go_of_the_hook() {
     // reason for it, *„das a d sorgt dafür dass man nicht immer direkt zum seil gezogen wird"*.
     // A rope that can only drag you at your anchor is a leash; one you can lean out of is a
     // swing.
-    let mut app = app();
-    let e = me(&mut app);
-    launch_on_the_ground(&mut app, e, 30.0);
-    anchor_the_left_hook(&mut app, e);
-    ticks(&mut app, 1);
-    assert_eq!(state(&app, e), MovementState::Tethered, "the rope has to be carrying him");
-
-    hold(&mut app, KeyCode::KeyD); // yaw = 0 ⇒ D is +X, across the +Z the rope handed him
-    ticks(&mut app, 30);
-    release(&mut app, KeyCode::KeyD);
-
-    let v = horizontal(&app, e);
+    //
+    // ## What the code reads and what the fixture varies (`docs/lessons/fixtures.md` rule 2)
+    //
+    // The code reads (`player::locomotion::air_control`): `air_accel_m_s2` (the swerve term,
+    // read at locomotion.rs' one site into `full_m_s2` → `air_thrust`), `drive_lateral_m_s`
+    // (the rope drive's own lateral), the winch keys, the anchor geometry, `move_x` from the
+    // held `D`. The fixture varies **only `air_accel_m_s2`** between its two runs (×1 against
+    // ×0, in this app's data copy); it holds constant the graybox map, the 30 m/s +Z launch,
+    // the anchor (35 m up, 15 m ahead, real joint), the key and the 30-tick window. So the
+    // difference of the two runs IS the swerve term and nothing else.
+    //
+    // 🔴 Why the bracket is TWO-SIDED and against the difference (FIND-238, mutations M8/M9):
+    // the old one-sided `v.x > 1.0` on a jointless fixture stayed green with the swerve accel
+    // ×0 (the bend came from `drive_lateral_m_s`) AND ×100. The ×0 mutation now collapses the
+    // difference to ~0 and fails the floor; ×100 balloons it past the ceiling.
+    let (bent_x, anchored) = swerve_bend_on_a_real_rope(1.0);
     assert!(
-        v.x > 1.0,
-        "half a second of D on the rope moved him {:.4} m/s sideways — the rope is still the \
-         only thing steering and the player is a passenger on it (F-006)",
-        v.x
-    );
-    let hook = app.world().get::<Hook>(e).expect("the player carries a Hook");
-    assert!(
-        matches!(hook.arm(Side::Left).state, HookState::Anchored { .. }),
+        anchored,
         "the swerve let go of the hook — F-006 is a course change WITHOUT releasing it"
+    );
+    assert!(
+        bent_x > 1.0,
+        "half a second of D on the rope moved him {bent_x:.4} m/s sideways — the rope is \
+         still the only thing steering and the player is a passenger on it (F-006)"
+    );
+
+    // The same flight with the swerve term deleted in the data — everything else identical.
+    let (numb_x, still_anchored) = swerve_bend_on_a_real_rope(0.0);
+    assert!(still_anchored, "deleting the swerve accel must not touch the hook");
+    let swerve_m_s = bent_x - numb_x;
+    // The shipped file's own number, read from disk so the bracket follows the tuning file —
+    // the mutation under test lives at the READ SITE in `locomotion.rs`, not in the RON, so
+    // this is not the same variable on both sides. Ideal is a·t with t = 30 ticks = 0.5 s
+    // (= 5.0 m/s for the shipped 10 m/s²); the real joint absorbs most of it — the sphere
+    // rotates lateral velocity back into the swing — and the fixture measures 0.72 m/s of
+    // the ideal 5.0 (2026-09-08, deterministic under the fixed timestep). The floor at 4 %
+    // of ideal sits 3.6× under that signal; the ×0 mutation leaves only solver noise (~0.01)
+    // and fails it by an order of magnitude.
+    let ideal_m_s =
+        GameData::load(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/data"))
+            .game
+            .player
+            .air_accel_m_s2
+            * 0.5;
+    assert!(
+        swerve_m_s > 0.04 * ideal_m_s,
+        "with the swerve accel on, D bends the flight by only {swerve_m_s:.4} m/s more than \
+         with it deleted (ideal a·t = {ideal_m_s:.2}, measured signal 0.72) — \
+         `air_accel_m_s2` is not reaching the tethered flight and the bend is the drive \
+         lateral wearing its name"
+    );
+    assert!(
+        swerve_m_s < 3.0 * ideal_m_s,
+        "the swerve term added {swerve_m_s:.4} m/s in half a second against an ideal a·t of \
+         {ideal_m_s:.2} — more than 3× the acceleration the file grants is not steering, it \
+         is a multiplied read"
+    );
+    println!(
+        "F-006 swerve on a real rope: D bends {bent_x:+.3} m/s with the term, \
+         {numb_x:+.3} m/s without — the swerve term is {swerve_m_s:+.3} m/s \
+         (ideal a·t {ideal_m_s:.2})"
     );
 }
 
@@ -4762,6 +4838,30 @@ fn anchor_the_left_hook_on(app: &mut App, e: Entity, anchor_m: Vec3) {
     let arm = &mut hook.arms[Side::Left.index()];
     arm.state = HookState::Anchored { body, local_m: anchor_m - center };
     arm.tip_m = anchor_m;
+}
+
+/// [`anchor_the_left_hook_on`] **plus the `HookAnchored` message a real bite sends** — the
+/// repair `tests/input.rs::taut_rope_then_hold` needed on 2026-09-02 and `FIND-232` names:
+/// `player::rope::attach_ropes` builds the `DistanceJoint` out of the MESSAGE, not out of the
+/// arm's state, so a fixture that forces the state alone has a winch but no rope, and every
+/// claim it measures about "the rope" is measured in a rope-less world.
+fn anchor_the_left_hook_with_a_real_rope(app: &mut App, e: Entity, anchor_m: Vec3) {
+    anchor_the_left_hook_on(app, e, anchor_m);
+    let player = *app.world().get::<PlayerId>(e).expect("the player carries a PlayerId");
+    let body = match app.world().get::<Hook>(e).expect("a Hook").arms[Side::Left.index()].state {
+        HookState::Anchored { body, .. } => body,
+        ref other => panic!("the helper above must leave the arm anchored, not {other:?}"),
+    };
+    let tick = app.world().resource::<Tick>().0;
+    app.world_mut().write_message(HookAnchored {
+        player,
+        side: Side::Left,
+        body,
+        point_x: anchor_m.x,
+        point_y: anchor_m.y,
+        point_z: anchor_m.z,
+        tick,
+    });
 }
 
 /// Lands the player on his legs and bites an anchor `rope_m` metres from the hand, at

@@ -1756,9 +1756,18 @@ fn f058_the_scuttler_travels_through_his_own_strike_and_the_husk_stands_still() 
     let mut scuttler_last = one_body(&mut app, "scuttler").1;
     let mut husk_last = one_body(&mut app, "husk").1;
     let (mut scuttler_m, mut husk_m) = (0.0f32, 0.0f32);
+    // Travel per CONTIGUOUS Strike, because 180 ticks can hold more than one blow: the upper
+    // bound below is a claim about ONE strike, and a total over two honest lunges must not
+    // fail it.
+    let (mut episode_m, mut worst_episode_m) = (0.0f32, 0.0f32);
     for _ in 0..180 {
         ticks(&mut app, 1);
-        scuttler_m += travelled(&mut app, "scuttler", &mut scuttler_last);
+        let (_, at, state) = one_body(&mut app, "scuttler");
+        let step = if state == TitanState::Strike { at.distance(scuttler_last) } else { 0.0 };
+        scuttler_last = at;
+        scuttler_m += step;
+        episode_m = if state == TitanState::Strike { episode_m + step } else { 0.0 };
+        worst_episode_m = worst_episode_m.max(episode_m);
         husk_m += travelled(&mut app, "husk", &mut husk_last);
     }
 
@@ -1768,7 +1777,29 @@ fn f058_the_scuttler_travels_through_his_own_strike_and_the_husk_stands_still() 
         "the scuttler covered {scuttler_m:.3} m inside his Strike; 14.0 m/s × 0.2 s is 2.8 m, so \
          `behaviour.lunge_m_s` is not reaching `titan::brain::walk`"
     );
-    println!("F-058 ground covered inside Strike: husk {husk_m:.3} m · scuttler {scuttler_m:.3} m");
+    // 🔴 **The UPPER half — the kill-matrix's hole (FIND-238): `lunge_m_s` read ×10 in
+    // `titan::brain` survived every test, because the lunge only had a floor.** The ceiling is
+    // the design's own sentence run forward: one Strike carries the body `lunge_m_s` ×
+    // `strike_s` metres and not a metre more, read out of this app's `titan.ron` so the bound
+    // follows the tuning file — plus 0.8 m of slack for the sampling grid (one 60 Hz tick each
+    // side of the window). ×10 at the read site is ~28 m in one episode and fails by an order
+    // of magnitude.
+    let k = app.world().resource::<GameData>().titan("scuttler").expect("scuttler");
+    let one_strike_m = k.behaviour.lunge_m_s * k.strike_s + 0.8;
+    assert!(
+        worst_episode_m <= one_strike_m,
+        "one Strike carried the scuttler {worst_episode_m:.3} m; `lunge_m_s` × `strike_s` \
+         is {:.1} × {:.1} = {:.2} m, so with 0.8 m of sampling slack anything past \
+         {one_strike_m:.2} m means the lunge speed is being multiplied on its way from \
+         `titan.ron` to `titan::brain`",
+        k.behaviour.lunge_m_s,
+        k.strike_s,
+        k.behaviour.lunge_m_s * k.strike_s
+    );
+    println!(
+        "F-058 ground covered inside Strike: husk {husk_m:.3} m · scuttler {scuttler_m:.3} m \
+         (worst single strike {worst_episode_m:.3} m, ceiling {one_strike_m:.2} m)"
+    );
 }
 
 /// **`F-059` — a weaver's nape is not a target until he commits.**
