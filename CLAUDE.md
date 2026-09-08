@@ -25,7 +25,9 @@ game is and why.
 hostname                                    # 'debian' = no window, and that is fine
 cat user-messages.md                        # the player's notes — READ FIRST, then migrate + empty
 git status --short && git log --oneline -5  # what did another session do?
-cat docs/STATUS.md docs/TODO.md             # where do we actually stand?
+sed -n '1,80p' docs/NEXT.md                 # the queue IS the state; STATUS/TODO are generated
+                                            # tables — grep them for one row, never cat whole
+                                            # (67 kB = ~17 000 tokens per session start, measured)
 export PATH="$HOME/.cargo/bin:$PATH"        # Rust lives in ~/.cargo (machine A)
 cargo check 2>&1 | grep '^error'            # is the tree green BEFORE I touch it?
 ```
@@ -187,6 +189,11 @@ the measurements out into `docs/lessons/` bought back about 2 800 of them.
 `cp target/debug/defeated_by_titan "$SCRATCH/dbt-pinned"` before any A/B, and interleave
 A/B/A/B on a shared machine. *"Same binary"* is a claim, and it is false by default while other
 agents are live — twice on 2026-08-13 one was rebuilt underneath a round mid-run.
+⚠️ **And a pinned binary does not pin its data SCHEMA** (measured 2026-09-02): a concurrent
+commission that changes a RON *key* makes every earlier binary refuse the file at load. A
+schema change must be announced in the fan-out; concurrent measurers shadow the assets root
+(copy of `assets/data/`, symlinks for the rest — `src/data` reads CWD first).
+→ [`docs/lessons/supervision.md`](docs/lessons/supervision.md)
 
 🔴 **4 · ATTACK CLAIMS, NOT CHORES.** A round whose deliverable is a value in a `.ron`, or a fix
 with a captured red-then-green message, carries its own proof and does **not** get an adversary.
