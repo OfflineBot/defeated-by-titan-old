@@ -210,6 +210,10 @@ fn attach_camera(
     let Some(player) = new_players.iter().next() else {
         return;
     };
+    // Ambient fill, distance fog and exposure — all three are per-view in Bevy 0.19, all
+    // three come out of `art.ron: lighting`, and they are only meaningful against each other
+    // (`render::light`). The fog is destructured out because it alone is per MAP as well.
+    let (ambient, fog, exposure) = light::camera_light_settings(&data.art.lighting);
     let camera = commands
         .spawn((
             Name::new("camera"),
@@ -223,10 +227,7 @@ fn attach_camera(
                 fov: settings.fov_deg.to_radians(),
                 ..default()
             }),
-            // Ambient fill, distance fog and exposure — all three are per-view in Bevy 0.19,
-            // all three come out of `art.ron: lighting`, and they are only meaningful against
-            // each other (`render::light`).
-            light::camera_light_settings(&data.art.lighting),
+            (ambient, exposure),
             // The one component that keeps the UI in an `--offscreen` image — see above.
             IsDefaultUiCamera,
             // Eye height above the player's origin — which lies between the feet
@@ -234,6 +235,17 @@ fn attach_camera(
             Transform::from_xyz(0.0, data.game.player.eye_height_m, 0.0),
         ))
         .id();
+    // The per-map fog switch (`maps.ron: <map>.fog`): a map wears the district's weather or
+    // it does not — the VALUES stay `art.ron: lighting.fog`, one weather for the whole game.
+    // The graybox writes `fog: false` because its flatness is a fixture guarantee (the aiming
+    // and player tests reason about exact silhouettes on it); until 2026-09-08 this insert was
+    // unconditional and the fixture map stood in weather no file had asked of it. Same shape
+    // as `light::setup_interior_lights`: `current_map()` answers, this system reads. A missing
+    // map is not reported here either — `world::map::build_map` already panics on it in the
+    // same `Startup`. The sky dome stays on BOTH maps (deliberate: it dims nothing).
+    if data.current_map().is_some_and(|m| m.fog) {
+        commands.entity(camera).insert(fog);
+    }
     commands.entity(player).add_child(camera);
 }
 

@@ -802,6 +802,13 @@ pub struct Map {
     /// and costs the exterior its shadows 1:1, and the boxes in the room stay flat
     /// rectangles because nothing gives them a lit face and a dark one.
     pub lights: Vec<MapLight>,
+    /// Does this map stand in the district's weather — the `DistanceFog` out of
+    /// `art.ron: lighting.fog`? **Explicit, never defaulted** (§4): a map that forgets the
+    /// key fails to load. The graybox writes `fog: false` and says so: its flatness is a
+    /// fixture guarantee — the aiming and player tests reason about exact silhouettes on it.
+    /// The VALUES stay in `art.ron: lighting` (one weather, solved as a system: fog colour
+    /// == sky horizon or the seam returns); this bool only says whether the map wears it.
+    pub fog: bool,
     /// `F-012` — **where the map ends, and what happens to somebody who is under it anyway.**
     ///
     /// The user, 2026-08-27: *„und man kann an der seite einfach runterfallen!"* and, asked

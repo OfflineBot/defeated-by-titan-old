@@ -377,6 +377,7 @@
             // The field carries no `serde(default)` (rule 2), so leaving it out is a load
             // error and not a silently dark room.
             lights: [],
+            fog: false,
 
             // F-019 — and the empty list is the statement, exactly like `lights` above. The
             // graybox is the FIXTURE: eight tests in `tests/vector_aiming.rs` and four in
@@ -1925,6 +1926,7 @@
                 // door: 11.0 keeps the sphere off the street apron with 3.7 m to spare.
                 (center_m: (-27.0, 8.5, 0.0), color: "lamp_warm", intensity_lm: 35000000.0, range_m: 11.0, shadows: false),
             ],
+            fog: true,
 
             // ================================================================================
             // F-019 — NACHSCHUB-STATIONEN. Four of them, and their placement is the feature.

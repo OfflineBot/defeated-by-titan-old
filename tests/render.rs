@@ -3257,3 +3257,149 @@ fn f003_the_terrain_system_hangs_the_mesh_on_the_sheet_in_the_real_app() {
          multiply every band"
     );
 }
+
+// ---------------------------------------------------------------------------------------------
+// The fog window against the district it stands in (docs/NEXT.md queue item 5, 2026-09-08).
+// ---------------------------------------------------------------------------------------------
+
+/// **The loom band** — the fog window has to hold three scene distances in three different
+/// states, or the mood the file was tuned for (FIND-112) silently unwinds on the next retune.
+///
+/// Variables the CODE reads: `DistanceFog.falloff{start, end}` — off the live camera, not out
+/// of the file, so a camera that lost its fog goes red here before any screenshot does.
+/// Variables the FIXTURE sets: the three distances, measured in FIND-112 on the standard
+/// district vantage (`scripts/f003-sky.txt`: 62 m up, north-east, looking south-west):
+///   50 m — the street in front of the player (one gantry bay and a half is 60);
+///  300 m — the far side of the district;
+///  450 m — the crown of the 120 m wall.
+///
+/// The three claims, each one a regression this file has already lived through once:
+/// - **fraction(450) >= 0.9** — the wall crown is nine tenths dissolved: it LOOMS, a mass in
+///   the haze, not a fully drawn building. The old `120/780` window put it at 36 % and the
+///   "aggressive" fog measured 6 sRGB levels across the whole district (FIND-112).
+/// - **fraction(300) in 0.4..0.8** — the district itself is layered, not clear and not gone.
+///   Below 0.4 is the no-fog week; above 0.8 is the whiteout the aerial vantage warns about
+///   (FIND-231: fog eats far relief first, and the aerial frame is the honest witness).
+/// - **fraction(50) == 0** — the near street carries no haze at all. The rejected
+///   `start_m: 25` variant cost the near quarter a sixth of its tones for depth it did not
+///   need (art.ron carries the measurement).
+///
+/// What the band looks like when it holds: `docs/images/f003-sky-wall-recut.png` —
+/// 2026-09-08, the `scripts/f003-sky.txt` vantage on the re-cut wall and the §5E green
+/// field, wall crown at ~95 %, crisp roofscape in the near quarter, the right third of the
+/// district dissolved. Same values as shipped; taken to confirm the model swap moved nothing.
+#[test]
+fn f071_the_wall_looms_and_the_near_street_stays_clear() {
+    let mut app = app();
+    let fog = {
+        let mut q = app.world_mut().query_filtered::<&DistanceFog, With<Camera3d>>();
+        q.iter(app.world()).next().expect("the camera carries the fog out of art.ron").clone()
+    };
+    let FogFalloff::Linear { start, end } = fog.falloff else {
+        panic!("the fog is not Linear — this band is defined over a start..end window");
+    };
+    assert!(end > start, "a fog window of {start}..{end} m is inside out");
+    let fraction = |d: f32| ((d - start) / (end - start)).clamp(0.0, 1.0);
+
+    let wall_crown = fraction(450.0);
+    assert!(
+        wall_crown >= 0.9,
+        "the wall crown at 450 m is only {:.0} % into the fog ({start}..{end} m) — it reads \
+         as a drawn building, not as a mass in the haze, and the district has no far wall to \
+         loom over it",
+        wall_crown * 100.0
+    );
+    let far_side = fraction(300.0);
+    assert!(
+        (0.4..=0.8).contains(&far_side),
+        "the far side of the district at 300 m is {:.0} % fogged ({start}..{end} m) — under \
+         40 % is the no-fog week FIND-112 measured, over 80 % eats the district itself, not \
+         only the relief behind it (FIND-231)",
+        far_side * 100.0
+    );
+    let near_street = fraction(50.0);
+    assert!(
+        near_street == 0.0,
+        "the street 50 m in front of the player carries {:.1} % haze ({start}..{end} m) — \
+         the near quarter pays contrast for depth it does not need (the rejected start_m 25)",
+        near_street * 100.0
+    );
+}
+
+/// **The per-map fog switch** — the graybox stands in clear air because its file line says
+/// so, and the shipping map wears the district's weather because its own line says so.
+///
+/// Variables the CODE reads: `maps.ron: <map>.fog` (the switch, per map) and — only where it
+/// is true — `art.ron: lighting.fog{color, start_m, end_m}` (the one weather). Both halves
+/// measure the live camera, not the file, so a camera that gains or loses its `DistanceFog`
+/// goes red here before any screenshot does.
+/// Variables the FIXTURE sets: which map the app stands on (`app_on("graybox")` against the
+/// default app on `maps.ron: current`). The difference between the two lists is exactly what
+/// this test pins: the SWITCH. The values behind it already have their own guards
+/// ([`f071_the_wall_looms_and_the_near_street_stays_clear`] holds the window,
+/// [`f071_the_sky_casts_no_shadow_and_the_fog_meets_it_at_the_horizon`] holds the seam).
+///
+/// Why the graybox half matters: its flatness is a fixture guarantee — eight tests in
+/// `tests/vector_aiming.rs` and four in `tests/player.rs` reason about exact silhouettes on
+/// it, and until 2026-09-08 the fog hung on the camera unconditionally, so the fixture map
+/// stood in weather no file had asked of it.
+#[test]
+fn the_graybox_stands_in_clear_air_and_the_current_map_wears_the_weather() {
+    // -- the fixture map: no DistanceFog at all, because its file line says `fog: false` --
+    let mut clear = app_on("graybox");
+    let declared = clear
+        .world()
+        .resource::<GameData>()
+        .map("graybox")
+        .expect("graybox is a map")
+        .fog;
+    assert!(
+        !declared,
+        "this test measures the clear-air case; graybox now declares fog: true — the fixture \
+         map has been re-purposed, re-aim the test before trusting it"
+    );
+    let none = {
+        let mut q = clear.world_mut().query_filtered::<Entity, (With<Camera3d>, With<DistanceFog>)>();
+        q.iter(clear.world()).count()
+    };
+    assert_eq!(
+        none, 0,
+        "the graybox camera carries a DistanceFog although `maps.ron: graybox.fog` is false — \
+         the fixture map is standing in weather no file asked of it"
+    );
+
+    // -- the shipping map: the fog on the camera IS the file's weather, value for value --
+    let mut worn = app();
+    let declared = worn
+        .world()
+        .resource::<GameData>()
+        .current_map()
+        .expect("maps.ron: current names a map")
+        .fog;
+    assert!(
+        declared,
+        "this test measures the worn case; `maps.ron: current` now points at a map that \
+         declares fog: false — name a fogged map here or the second half measures nothing"
+    );
+    let fog = {
+        let mut q = worn.world_mut().query_filtered::<&DistanceFog, With<Camera3d>>();
+        q.iter(worn.world())
+            .next()
+            .expect("the current map declares fog: true and the camera carries none — the switch is stuck off")
+            .clone()
+    };
+    let k = worn.world().resource::<GameData>().art.lighting.clone();
+    let FogFalloff::Linear { start, end } = fog.falloff else {
+        panic!("the fog is {:?}, and only Linear is what art.ron writes", fog.falloff);
+    };
+    assert_eq!(
+        (start, end),
+        (k.fog.start_m, k.fog.end_m),
+        "the worn fog window is not the file's — the switch swapped the values on the way through"
+    );
+    assert_eq!(
+        fog.color,
+        Color::linear_rgb(k.fog.color.0, k.fog.color.1, k.fog.color.2),
+        "the worn fog colour is not the file's — linear, like the palette (render::light::linear)"
+    );
+}
