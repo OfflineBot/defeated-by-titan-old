@@ -2192,3 +2192,21 @@ the swerve term contributes 0.724 of its 5.0 m/s ideal — the drive lateral car
 of the 23.4 m/s bend; `air_accel_m_s2` is nearly feel-irrelevant while tethered.
 Honest limits: the cost ceilings assume no gate machine ≥20× slower (debian unmeasured);
 the brackets are tripwires, not tight specs (a swerve ×5 would pass).
+
+## FIND-239 — the rebuilt queue re-derived a CLOSED item, and a grep was cheaper than the round it commissioned (2026-09-08)
+
+NEXT item 5 ("sky and fog: still ClearColor") restated archive §1F-4 from 2026-08-18 —
+but sky + fog have been BUILT since 2026-08-13 (src/render/light.rs: gradient dome +
+DistanceFog, values solved in FIND-112, art.ron: lighting), and world.md:82 had already
+corrected itself. The 2026-09-08 queue rebuild carried the stale sentence past that
+correction: **when rebuilding an index from headings, every carried item gets one grep
+against the tree before it re-enters the queue** — the "read it, don't re-derive it"
+rule applies to the queue file itself. The round it wrongly commissioned still paid rent:
+a loom-band guard test (fog fractions at 450/300/50 m read off the LIVE camera,
+red-then-green in both directions), fresh three-vantage evidence on today's tree
+(the model swap moved ZERO sky pixels — aerial bit-identical), and the one missing piece
+now landing: the per-map fog switch (graybox honestly fog-free, ASSUMPTION executed —
+fixture hygiene, no user taste involved; rollback = one bool per map).
+Unseen, honestly: nobody has judged this sky IN MOTION — banding on a fast climb and the
+haze at 60 m/s are untested; and the "inhabited" mood gap (green field, intact red roofs)
+is geometry's, not fog's.

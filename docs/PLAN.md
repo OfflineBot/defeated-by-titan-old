@@ -251,3 +251,32 @@ b043-flick-gap re-measured (the 1.02 m @ 14 m one-tick term collapses to ≈0; r
 asserts before re-pinning) · THEN f025-chain re-run, never re-pinned first (FIND-228).
 Scout's open point: whether b043-flick-gap pins red numbers or is a pure harness — read
 before re-running.
+
+## The blades double round — sequenced 2026-09-08 (arc first, guard second)
+
+**Order re-derived against pose-true limbs:** every §2F number is a function of blade
+geometry, so the FORWARD ARC (§2H/FIND-127) lands first and F-060 (§2F/FIND-123) second;
+§2F step 1 (re-aim the contaminated rows to open the guard EXPLICITLY via an arm pass)
+merges into the arc's own re-pin pass — an arm-pass opening is legal under both rules, so
+the corpus stays green through both landings. The warden was never touched by the
+pose-true wave (Primitive on purpose, titan.ron:477-480) — §2F's mechanism survives
+verbatim, strengthened: posed arm boxes are honest surfaces now.
+
+**Phases:** A0 (ONE agent): src/blades/cut.rs+hold.rs+swing.rs — the arc replaces the 90°
+cast (cut.rs:176-207), one expression for cast and drawing (FIND-113 rule), origin
+eye→hand height; pure frustum unit test derived from game.ron fov (never hardcoded
+45.7°). A1 ∥ A2: A1 = tests/combat.rs + 10 combat scripts + images + F-030/032/034 rows;
+A2 = tests/titan.rs (q030/q031/f030 fixtures, warden rows authored explicit-open) + 8
+mission-loop scripts. Closure instrument: `grep -l slash scripts/` = exactly 18 — any
+script not re-run after A0 is lying by evening. B (ONE agent, serial): the withheld
+matches! at brain.rs:320 + tests/mission.rs f060 torso-half INVERTS + Q-031 margin
+re-measured through the clean path — quoted command MUST carry --include-ignored (q031 is
+full-tier; FIND-235's own disease otherwise).
+
+**Standing risks:** the f034/f030 byte-identical PNG pair dies unless re-taken as a pair ·
+b042 scripts re-derive placements from drawn_poses numbers, never nudge-to-green · author
+NO guard evidence against a glb-bound kind (HitZoneOf boxes follow the posed PRIMITIVE
+rig; glb kinds register on static capsules — arm can book Torso; foreign find for the
+model generator) · reach honesty 0.93 m drawn vs 2.00 m cast (FIND-127's 0.67 grew to
+1.07): defer to the generator (a reach-true blade pair dissolves it) — recorded, not
+silently kept.

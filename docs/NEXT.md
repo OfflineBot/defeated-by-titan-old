@@ -27,8 +27,11 @@ sanctioned** where they buy honest hitboxes; adapt the docs so they help; keep i
 4. **Traversal/lane ruling — HIS** (archive §2G + FIND-229): gantries replace/keep/accept-slow,
    AND the measured new fact that river tower body 79 at 345 m outcompetes the lane beam.
    f025-chain, f004-towers, w5-lane re-pins all wait on this one ruling.
-5. **Sky and fog** (archive §1F-4): still ClearColor. The fallen-ring mood is fog+light more
-   than geometry; cheapest big look win after the wall re-cut.
+5. ~~Sky and fog~~ **WAS ALREADY BUILT (2026-08-13, FIND-112)** — the queue rebuild
+   re-derived a closed item (FIND-239). What the round added: the loom-band guard test,
+   fresh evidence, and the per-map fog switch (graybox honestly fog-free) — landing.
+   The real remaining mood gap is geometry: the green field and intact red roofs read
+   INHABITED (§1F items 1–2, blocked-lanes/salvage dressing, still open).
 6. **B-045**: game-full's two rope reds (slack rope moves a standing player 9.7 m/s; 16 m/s at
    release after a full stop) — needs a rope-domain owner, numbers are in the entry.
 7. **Speed-envelope drift attribution** (FIND-230): f-001-hooks says 12/14, measures 10/14;
