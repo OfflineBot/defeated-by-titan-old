@@ -11,6 +11,7 @@ commit message is a decision the next session will overturn by accident.
 
 | File | What is in it |
 |---|---|
+| [`das-spiel.md`](das-spiel.md) | the complete gameplay description, written 2026-10-15 for the full restart — every playtest-earned feel rule as law, in the player's language (German, like all of gameplay/) |
 | [`pillars.md`](pillars.md) | the game in one sentence, the five design pillars, the ten things done better than the reference, the success metrics |
 | [`world.md`](world.md) | setting, tone, what titans are, the visual style, the platform rules |
 | [`enemies.md`](enemies.md) | the enemy philosophy, the eight titan kinds, the anti-autopilot rule |
